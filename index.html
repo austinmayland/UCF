@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>UCF Power Rankings</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: flat black masthead, week chips, podium for the top three, then tabbed analysis. Neutral graphite palette with one steel-blue accent. */
+:root{
+  --bg:#f4f4f5; --surface:#ffffff; --surface2:#f8f8f9; --fg:#18181b; --muted:#6b6b73; --line:#e4e4e7;
+  --accent:#2f5d8a; --gold:#a37b1a; --silver:#71717a; --bronze:#9a6238; --up:#1d7a4b; --down:#b3382c;
+  --hero:#111113; --hero-fg:#f4f4f5; --hero-line:#ffffff24; --chart-l:42%;
+  --f-display:Calibri,Carlito,'Segoe UI',Arial,sans-serif; --f-body:Calibri,Carlito,'Segoe UI',Arial,sans-serif; --f-data:Calibri,Carlito,'Segoe UI',Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0b0b0c; --surface:#141416; --surface2:#1a1a1d; --fg:#ececee; --muted:#8e8e96; --line:#26262a;
+  --accent:#6aa5e0; --gold:#d4a93f; --silver:#a1a1aa; --bronze:#c08457; --up:#4cc38a; --down:#ef6f62;
+  --hero:#000000; --hero-fg:#ececee; --hero-line:#ffffff24; --chart-l:64%; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b0b0c; --surface:#141416; --surface2:#1a1a1d; --fg:#ececee; --muted:#8e8e96; --line:#26262a;
+  --accent:#6aa5e0; --gold:#d4a93f; --silver:#a1a1aa; --bronze:#c08457; --up:#4cc38a; --down:#ef6f62;
+  --hero:#000000; --hero-fg:#ececee; --hero-line:#ffffff24; --chart-l:64%; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0}
+.podium{margin-top:20px}
+nav{scrollbar-width:none}nav::-webkit-scrollbar{display:none}
+nav button{padding:8px 12px}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.45;font-variant-numeric:tabular-nums;padding-block:0 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.hero{margin:0 calc(-1*max(16px,env(safe-area-inset-left,0px)));padding:28px max(16px,env(safe-area-inset-left,0px)) 22px;background:var(--hero);color:var(--hero-fg);border-bottom:1px solid var(--line)}
+.hero-in{max-width:1120px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(34px,5.5vw,52px);line-height:1;letter-spacing:.02em;text-transform:uppercase;text-wrap:balance}
+h1 small{display:block;font-size:.26em;font-weight:500;letter-spacing:.2em;opacity:.65;margin-top:10px;font-weight:500}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chips .lbl{font-size:11px;letter-spacing:.16em;text-transform:uppercase;opacity:.7;margin-right:4px}
+.chip{font-family:var(--f-display);font-weight:600;font-size:17px;letter-spacing:.04em;min-width:42px;padding:3px 10px;border-radius:5px;border:1px solid var(--hero-line);background:transparent;color:var(--hero-fg);cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--hero-fg);color:var(--hero);border-color:var(--hero-fg)}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.podium{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.pod{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:14px 16px;display:flex;gap:12px;align-items:center;min-width:0;border-top:3px solid var(--c)}
+.pod .n{font-family:var(--f-display);font-weight:700;font-size:46px;line-height:1;color:var(--c)}
+.pod .nm{font-family:var(--f-display);font-weight:700;font-size:23px;line-height:1.05;overflow-wrap:anywhere}
+.pod .m{font-family:var(--f-data);font-size:12px;color:var(--muted);margin-top:2px}
+.pod:nth-child(1){--c:var(--gold)}.pod:nth-child(2){--c:var(--silver)}.pod:nth-child(3){--c:var(--bronze)}
+.av{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-display);font-weight:700;font-size:15px;color:#fff;background:hsl(var(--h) 24% 34%)}
+.av.lg{width:52px;height:52px;font-size:22px}
+nav{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
+nav button{font-family:var(--f-display);font-size:19px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:none;border:0;border-bottom:3px solid transparent;color:var(--muted);padding:8px 14px;cursor:pointer;white-space:nowrap}
+nav button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:8px;min-width:0}
+.scroll{overflow-x:auto}
+.ph{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:center;padding:12px 16px 4px}
+.ph h2{font-family:var(--f-display);font-size:22px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:500;text-align:left;padding:10px 12px;white-space:nowrap}
+td{padding:9px 12px;border-top:1px solid var(--line);white-space:nowrap}
+th.n,td.n{text-align:right}
+tr.row{cursor:pointer}
+tr.row:hover td{background:var(--surface2)}
+tr.sel td{background:color-mix(in srgb,var(--accent) 11%,var(--surface))}
+.rk{font-family:var(--f-display);font-weight:700;font-size:28px;line-height:1;width:46px}
+.tm{display:flex;align-items:center;gap:10px}
+.tn{font-family:var(--f-display);font-weight:600;font-size:21px;letter-spacing:.02em}
+.mono{font-family:var(--f-data);font-size:15px}
+.sub{color:var(--muted);font-size:12px;margin-left:4px;font-family:var(--f-data)}
+.d{font-family:var(--f-data);font-size:12px}.d.up{color:var(--up)}.d.dn{color:var(--down)}.d.eq{color:var(--muted)}
+.pos{color:var(--up)}.neg{color:var(--down)}
+.bar{display:inline-block;width:84px;height:8px;border-radius:4px;background:var(--line);vertical-align:middle;margin-left:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.note{font-size:12px;color:var(--muted);padding:10px 16px;border-top:1px solid var(--line)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;padding:12px 16px 16px}
+.tile{background:var(--surface2);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.tile .l{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.tile .v{font-family:var(--f-display);font-weight:700;font-size:26px;line-height:1.1;overflow-wrap:anywhere}
+.tile .s{font-size:12px;color:var(--muted);font-family:var(--f-data)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{font:inherit;font-size:13px;padding:5px 12px;background:var(--surface);color:var(--muted);border:0;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--surface);font-weight:600}
+svg text{fill:var(--muted);font-family:var(--f-data);font-size:11px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;padding:4px 16px 12px}
+.legend button{background:none;border:0;color:var(--fg);font:inherit;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;padding:2px 0}
+.legend i{width:14px;height:4px;border-radius:2px;display:inline-block}
+.heat{text-align:center;font-family:var(--f-data);font-size:13px;min-width:86px}
+.heat b{font-weight:600;color:var(--fg)}
+.rb{display:inline-block;width:14px;font-weight:700;font-size:12px;color:var(--muted)}.rb.w{color:var(--up)}.rb.l{color:var(--down)}
+html{scrollbar-gutter:stable;overflow-y:scroll}
+#view{min-height:75vh}
+.mu{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;padding:12px 16px 16px}
+.card{background:var(--surface2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.side{display:flex;align-items:center;gap:10px;padding:10px 12px}
+.side+.side{border-top:1px solid var(--line)}
+.side .tn{flex:1;min-width:0;font-size:19px}
+.side .sc{font-family:var(--f-data);font-size:15px;font-weight:500}
+.side.lose{opacity:.55}
+.side.win .sc{font-weight:600}
+.side .mk{width:18px;font-family:var(--f-display);font-weight:700;color:var(--up)}
+.card .ft{font-size:11px;color:var(--muted);padding:5px 12px;border-top:1px solid var(--line);font-family:var(--f-data)}
+.mth{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;padding:12px 16px 18px}
+.slider{display:grid;grid-template-columns:150px 1fr 38px;gap:10px;align-items:center;padding:6px 16px;font-size:14px}
+.slider input{width:100%;accent-color:var(--accent)}
+select,input[type=number],input[type=text]{font:inherit;color:var(--fg);background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:5px 7px}
+.btn{font:inherit;font-size:13px;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer;color:var(--fg)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--surface);font-weight:600}
+.tools{display:flex;flex-wrap:wrap;gap:8px;padding:12px 16px;align-items:center}
+.dt input[type=number]{width:62px;padding:3px 4px;font-family:var(--f-data);font-size:12px;text-align:right}
+.dt input.nm{width:150px;font-weight:600}
+.dt select{padding:2px;font-size:11px;width:62px;margin-top:3px;display:block}
+.dt td,.dt th{padding:6px 5px}
+textarea{width:calc(100% - 32px);margin:0 16px 12px;min-height:90px;font-family:var(--f-data);font-size:11px;background:var(--bg);color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:8px}
+.formula{font-family:var(--f-data);font-size:12px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:10px 12px;line-height:1.7}
+.p{padding:0 16px;font-size:14px;color:var(--muted)}
+@media (max-width:640px){.podium{grid-template-columns:1fr}.slider{grid-template-columns:110px 1fr 34px}}
+@media (prefers-reduced-motion:no-preference){.bar i{transition:width .3s}}
+</style>
+
+</head>
+<body>
+<div class="hero"><div class="hero-in">
+  <h1>UCF Power Rankings<small>FOOTBALL (NOT REALLY THOUGH) &#xb7; 2026</small></h1>
+  <div class="chips" id="chips"></div>
+</div></div>
+<div class="wrap">
+  <section class="podium" id="podium"></section>
+  <nav role="tablist" id="tabs"></nav>
+  <main id="view"></main>
+</div>
+
+<script>
+var WEEKS = 17, KEY = 'ucf-power-2026-v3';
+var TABS = [['rank','Power rankings'],['match','Matchups'],['trend','Trends'],['outlook','Outlook'],['comm','Week 6 intel'],['scores','Results'],['method','Method']];
+var tab='rank', hl=null, asof=0, trendMode='rank';
+var DEF_W = {ap:3, ppg:2.5, form:1.5, rec:1.5, win:3, spots:6, reg:14};
+
+/* ---------- 2026 data: [points, opponent index] per week ---------- */
+var NAMES = ['Kenny Keller','Austin Mayland','Edsall Hilty','Bryan Rosen','Matt Ender','Jordan Schneider','Jordan Lande','Jorge Fernandez','Andrew Goldsmith','Dean Mizrahi'];
+var PTS = [ /* weeks 1-6, in NAMES order */
+ [124.72,161.42,144.76,149.96,139.66,104.7],
+ [164.46,151.14,133.38,213.58,133.74,134.6],
+ [160.36,121.12,127.5,154.94,162.14,145.84],
+ [200.1,149.26,156.4,89.3,141.24,110.32],
+ [159.5,114.76,143.54,151.06,153.54,145.14],
+ [96.64,135.08,146.28,148.82,115.26,150.06],
+ [105.96,106.08,134.88,141.02,147.0,111.84],
+ [150.62,118.16,90.12,113.6,159.0,110.48],
+ [148.26,186.22,153.16,116.42,105.78,100.6],
+ [146.06,71.1,128.14,148.08,133.72,112.88]];
+var PAIRS = [ /* matchups by name index per week */
+ [[7,1],[4,5],[8,2],[0,6],[3,9]],
+ [[9,1],[8,4],[5,0],[2,3],[6,7]],
+ [[1,2],[4,0],[3,8],[7,5],[9,6]],
+ [[8,1],[3,4],[0,7],[5,9],[2,6]],
+ [[1,3],[4,7],[9,0],[6,8],[2,5]],
+ [[1,4],[7,9],[3,6],[0,2],[8,5]]];
+function realData(){
+  var teams = NAMES.map(function(n,i){
+    var sc=[],op=[]; for (var w=0;w<WEEKS;w++){ sc.push(PTS[i][w]===undefined?null:PTS[i][w]); op.push(null); }
+    return {id:'t'+i, name:n, scores:sc, opp:op};
+  });
+  PAIRS.forEach(function(wk,w){ wk.forEach(function(p){ teams[p[0]].opp[w]='t'+p[1]; teams[p[1]].opp[w]='t'+p[0]; }); });
+  return {teams:teams, w:JSON.parse(JSON.stringify(DEF_W))};
+}
+var state = realData();
+try { var raw=localStorage.getItem(KEY); var sw = raw?JSON.parse(raw):null; if (sw && sw.ap!==undefined) state.w = Object.assign({}, DEF_W, sw); } catch(e){}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(state.w)); } catch(e){} }
+
+/* ---------- model ---------- */
+function num(x){ return (x===null||x===''||x===undefined||isNaN(Number(x)))?null:Number(x); }
+function byId(id){ return state.teams.filter(function(t){return t.id===id;})[0]; }
+function lastWeek(){ var l=0; state.teams.forEach(function(t){ t.scores.forEach(function(s,i){ if (num(s)!==null && i+1>l) l=i+1; }); }); return l; }
+function mean(a){ return a.length? a.reduce(function(x,y){return x+y;},0)/a.length : 0; }
+function zs(v){ var m=mean(v), sd=Math.sqrt(mean(v.map(function(x){return (x-m)*(x-m);}))); return v.map(function(x){ return sd? (x-m)/sd : 0; }); }
+function rankDesc(v){ return v.map(function(x){ return 1+v.filter(function(y){return y>x;}).length; }); }
+function game(t,k){ /* result of week k (0-based): {opp,us,them,res} */
+  var s=num(t.scores[k]); if (s===null) return null;
+  var o=t.opp[k]?byId(t.opp[k]):null, os=o?num(o.scores[k]):null;
+  var res = (os===null)?null:(s>os?1:(s<os?0:0.5));
+  return {s:s, opp:o, os:os, res:res};
+}
+function compute(w){
+  var T=state.teams, N=T.length, W=state.w;
+  var rows=T.map(function(t,i){
+    var sc=[],wins=0,loss=0,ties=0,pa=0,played=0,apw=0,apl=0;
+    for (var k=0;k<w;k++){
+      var g=game(t,k); if (!g) continue; sc.push(g.s);
+      if (g.res!==null){ played++; pa+=g.os; if (g.res===1) wins++; else if (g.res===0) loss++; else ties++; }
+      T.forEach(function(o){ if (o===t) return; var os=num(o.scores[k]); if (os===null) return; if (os<g.s) apw++; else if (os>g.s) apl++; else {apw+=0.5; apl+=0.5;} });
+    }
+    var n=sc.length, fw=Math.max(2,Math.min(5,W.win|0)), fs=sc.slice(-fw);
+    var apPct = (apw+apl)? apw/(apw+apl):0;
+    return {i:i,id:t.id,name:t.name,g:n,played:played,wins:wins,loss:loss,ties:ties,pf:sc.reduce(function(a,b){return a+b;},0),pa:pa,
+      avg:mean(sc),sd:Math.sqrt(mean(sc.map(function(x){return (x-mean(sc))*(x-mean(sc));}))),form:mean(fs),high:n?Math.max.apply(null,sc):0,low:n?Math.min.apply(null,sc):0,apw:apw,apl:apl,apPct:apPct,
+      recPct:played?(wins+ties/2)/played:0, luck:(wins+ties/2)-apPct*played};
+  });
+  var zA=zs(rows.map(function(r){return r.apPct;})), zP=zs(rows.map(function(r){return r.avg;})), zF=zs(rows.map(function(r){return r.form;})), zR=zs(rows.map(function(r){return r.recPct;}));
+  var ws=W.ap+W.ppg+W.form+W.rec||1;
+  rows.forEach(function(r,k){ r.rating = 50+15*((zA[k]*W.ap+zP[k]*W.ppg+zF[k]*W.form+zR[k]*W.rec)/ws); });
+  /* original method for comparison */
+  var rec=rankDesc(rows.map(function(r){return r.wins+r.ties/2;})), ow=rankDesc(rows.map(function(r){return r.apw;})), pp=rankDesc(rows.map(function(r){return r.avg;}));
+  var lg=mean(rows.map(function(r){return r.avg;}));
+  var cons=rows.map(function(r,k){ var sd=0,m=r.avg,c=0; for (var q=0;q<w;q++){ var s=num(T[k].scores[q]); if (s!==null){ sd+=(s-m)*(s-m); c++; } } sd=c?Math.sqrt(sd/c):0; return r.avg-3*sd-0.75*lg; });
+  var cn=rankDesc(cons), wRec=Math.min(1.2*w,3), wCons=w<3?0:1, wSum=wRec+1+wCons+1;
+  rows.forEach(function(r,k){ r.oldScore=(rec[k]*wRec+ow[k]+cn[k]*wCons+pp[k])/wSum; });
+  var oo=rows.slice().sort(function(a,b){return a.oldScore-b.oldScore||b.avg-a.avg;}); oo.forEach(function(r,k){ r.oldRank=k+1; });
+  var ord=rows.slice().sort(function(a,b){return b.rating-a.rating||b.avg-a.avg;}); ord.forEach(function(r,k){ r.power=k+1; });
+  return {rows:ord, lgAvg:lg};
+}
+var cache={};
+function at(w){ if(!cache[w]) cache[w]=compute(w); return cache[w]; }
+function rowOf(w,i){ return at(w).rows.filter(function(r){return r.i===i;})[0]; }
+function delta(r,w){ if (w<2) return null; return rowOf(w-1,r.i).power - r.power; }
+
+/* ---------- helpers ---------- */
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+function f1(x){ return (Math.round(x*10)/10).toFixed(1); }
+function f2(x){ return (Math.round(x*100)/100).toFixed(2); }
+function hue(i){ return Math.round(i*360/Math.max(state.teams.length,1)+14)%360; }
+function col(i){ return 'hsl('+hue(i)+' 62% var(--chart-l))'; }
+function ini(n){ var p=n.trim().split(/\s+/); return (p[0][0]||'')+((p[1]||'')[0]||''); }
+function short(n){ var p=n.trim().split(/\s+/); return p.length>1? p[0]+' '+p[p.length-1][0]+'.' : n; }
+function av(i,lg){ return '<span class="av'+(lg?' lg':'')+'" style="--h:'+hue(i)+'">'+esc(ini(state.teams[i].name))+'</span>'; }
+function rec(r){ return r.played? r.wins+'-'+r.loss+(r.ties?'-'+r.ties:'') : '\u2013'; }
+function sgn(x){ return (x>0?'+':'')+f1(x); }
+function dHtml(d){ if (d===null) return '<span class="d eq">\u2013</span>'; if (d>0) return '<span class="d up">\u25b2 '+d+'</span>'; if (d<0) return '<span class="d dn">\u25bc '+(-d)+'</span>'; return '<span class="d eq">\u2013</span>'; }
+function spark(i,w){
+  var v=[]; for (var k=0;k<w;k++){ var s=num(state.teams[i].scores[k]); if (s!==null) v.push(s); }
+  if (v.length<2) return '';
+  var lo=Math.min.apply(null,v), hi=Math.max.apply(null,v), W=84, H=24, rng=(hi-lo)||1;
+  var pts=v.map(function(x,k){ return (3+(W-6)*k/(v.length-1)).toFixed(1)+','+(H-3-(H-6)*(x-lo)/rng).toFixed(1); });
+  var lp=pts[pts.length-1].split(',');
+  return '<svg width="'+W+'" height="'+H+'" viewBox="0 0 '+W+' '+H+'" aria-hidden="true"><polyline fill="none" stroke="'+col(i)+'" stroke-width="2" points="'+pts.join(' ')+'"/><circle cx="'+lp[0]+'" cy="'+lp[1]+'" r="3" fill="'+col(i)+'"/></svg>';
+}
+
+/* ---------- views ---------- */
+function renderChips(){
+  var last=lastWeek(), h='<span class="lbl">As of week</span>';
+  for (var k=1;k<=Math.max(last,1);k++) h+='<button class="chip" data-wk="'+k+'" aria-pressed="'+(asof===k)+'">'+k+'</button>';
+  document.getElementById('chips').innerHTML=h;
+}
+function renderPodium(w){
+  var el=document.getElementById('podium');
+  if(!w){ el.innerHTML=''; return; }
+  el.innerHTML=at(w).rows.slice(0,3).map(function(r){
+    return '<div class="pod"><div class="n">'+r.power+'</div>'+av(r.i)+'<div style="min-width:0"><div class="nm">'+esc(r.name)+'</div><div class="m">'+f1(r.rating)+' rating \u00b7 '+rec(r)+' \u00b7 '+f1(r.avg)+' ppg</div></div></div>';
+  }).join('');
+}
+function vRank(w){
+  if(!w) return '<div class="panel"><div class="note">No scores yet. Add week 1 on the Data tab.</div></div>';
+  var d=at(w), rows=d.rows, mx=Math.max.apply(null,rows.map(function(r){return r.rating;})), mn=Math.min.apply(null,rows.map(function(r){return r.rating;}));
+  var h='<div class="panel"><div class="ph"><h2>Week '+w+' power rankings</h2><span class="sub">Click a team for its game log</span></div><div class="scroll"><table><thead><tr><th>#</th><th>\u0394</th><th>Team</th><th>Rating</th><th class="n">Record</th><th class="n">All-play</th><th class="n">PPG</th><th class="n">Last '+state.w.win+'</th><th class="n">Luck</th><th>Form</th><th class="n">Old #</th></tr></thead><tbody>';
+  rows.forEach(function(r){
+    var c=r.power===1?'var(--gold)':r.power===2?'var(--silver)':r.power===3?'var(--bronze)':'var(--fg)';
+    var od=r.oldRank-r.power;
+    h+='<tr class="row'+(hl===r.i?' sel':'')+'" data-t="'+r.i+'"><td class="rk" style="color:'+c+'">'+r.power+'</td><td>'+dHtml(delta(r,w))+'</td>'
+     +'<td><div class="tm">'+av(r.i)+'<span class="tn">'+esc(r.name)+'</span></div></td>'
+     +'<td class="mono">'+f1(r.rating)+'<span class="bar"><i style="width:'+Math.round(8+92*(r.rating-mn)/((mx-mn)||1))+'%"></i></span></td>'
+     +'<td class="n mono">'+rec(r)+'</td><td class="n mono">'+f1(r.apw)+'-'+f1(r.apl)+'</td><td class="n mono">'+f1(r.avg)+'</td><td class="n mono">'+f1(r.form)+'</td>'
+     +'<td class="n mono '+(r.luck>0.4?'pos':r.luck<-0.4?'neg':'')+'">'+sgn(r.luck)+'</td><td>'+spark(r.i,w)+'</td>'
+     +'<td class="n mono">'+r.oldRank+'<span class="sub '+(od>0?'pos':od<0?'neg':'')+'">'+(od?(od>0?'\u25b2':'\u25bc')+Math.abs(od):'')+'</span></td></tr>';
+  });
+  h+='</tbody></table></div><div class="note">Rating blends all-play win %, season PPG, recent PPG and record as z-scores (50 is league average). Luck is actual wins minus the wins an all-play record would predict. Old # is the rank under the original spreadsheet formula, with its change in brackets.</div></div>';
+  if (hl!==null) h+=vDetail(w);
+  return h+vNotes(w);
+}
+function vDetail(w){
+  var r=rowOf(w,hl), t=state.teams[hl], lgv=at(w).lgAvg, mx=0, k;
+  var games=[]; for (k=0;k<w;k++){ var g=game(t,k); if (g) games.push({k:k,g:g}); }
+  state.teams.forEach(function(x){ for (var q=0;q<w;q++){ var s=num(x.scores[q]); if (s!==null&&s>mx) mx=s; } });
+  var bw=36, H=150, W=Math.max(games.length*bw+30,200);
+  var s='<svg viewBox="0 0 '+W+' '+(H+22)+'" width="'+W+'" height="'+(H+22)+'" role="img" aria-label="Weekly scores">';
+  games.forEach(function(x,j){
+    var h=H*x.g.s/mx, wk=x.k, avg=mean(state.teams.map(function(o){return num(o.scores[wk]);}).filter(function(v){return v!==null;})), ay=H-H*avg/mx;
+    s+='<rect x="'+(18+j*bw)+'" y="'+(H-h)+'" width="24" height="'+h+'" rx="3" fill="'+col(hl)+'"/><text x="'+(30+j*bw)+'" y="'+(H-h-4)+'" text-anchor="middle">'+Math.round(x.g.s)+'</text>'
+     +'<line x1="'+(14+j*bw)+'" x2="'+(46+j*bw)+'" y1="'+ay+'" y2="'+ay+'" stroke="var(--fg)" stroke-width="1.5" stroke-dasharray="3 2"/><text x="'+(30+j*bw)+'" y="'+(H+14)+'" text-anchor="middle">W'+(wk+1)+'</text>';
+  });
+  s+='</svg>';
+  var tiles=[['Rating',f1(r.rating),'Rank #'+r.power],['Record',rec(r),'All-play '+f1(r.apw)+'-'+f1(r.apl)],['Points for',f1(r.pf),f1(r.avg)+' per game'],['Points against',f1(r.pa),r.played?f1(r.pa/r.played)+' per game':''],['High / low',f1(r.high)+' / '+f1(r.low),'Range '+f1(r.high-r.low)],['Luck',sgn(r.luck),'wins vs all-play']];
+  var h='<div class="panel" style="margin-top:18px"><div class="ph"><div class="tm">'+av(hl,true)+'<h2>'+esc(t.name)+'</h2></div><button class="btn" data-t="'+hl+'">Close</button></div><div class="grid">'
+   +tiles.map(function(x){ return '<div class="tile"><div class="l">'+x[0]+'</div><div class="v">'+x[1]+'</div><div class="s">'+x[2]+'</div></div>'; }).join('')+'</div>'
+   +'<div class="scroll" style="padding:0 16px 8px">'+s+'</div><div class="p">Dashed line is the league average for that week.</div>'
+   +'<div class="scroll" style="margin-top:10px"><table><thead><tr><th>Week</th><th>Opponent</th><th class="n">Score</th><th class="n">Opp</th><th class="n">Margin</th><th>Result</th></tr></thead><tbody>';
+  games.forEach(function(x){ var g=x.g; h+='<tr><td class="mono">W'+(x.k+1)+'</td><td>'+(g.opp?esc(g.opp.name):'\u2013')+'</td><td class="n mono">'+f2(g.s)+'</td><td class="n mono">'+(g.os===null?'\u2013':f2(g.os))+'</td><td class="n mono">'+(g.os===null?'\u2013':sgn(g.s-g.os))+'</td><td class="mono '+(g.res===1?'pos':g.res===0?'neg':'')+'">'+(g.res===1?'W':g.res===0?'L':g.res===0.5?'T':'\u2013')+'</td></tr>'; });
+  return h+'</tbody></table></div></div>';
+}
+function allGames(w){
+  var out=[]; state.teams.forEach(function(t,i){ for (var k=0;k<w;k++){ var g=game(t,k); if (g) out.push({i:i,k:k,g:g}); } }); return out;
+}
+function vNotes(w){
+  var G=allGames(w), rows=at(w).rows, notes=[];
+  var hi=G.slice().sort(function(a,b){return b.g.s-a.g.s;})[0], lo=G.slice().sort(function(a,b){return a.g.s-b.g.s;})[0];
+  var dec=G.filter(function(x){return x.g.res!==null && x.g.res!==0.5 && x.g.s>x.g.os;});
+  var big=dec.slice().sort(function(a,b){return (b.g.s-b.g.os)-(a.g.s-a.g.os);})[0], close=dec.slice().sort(function(a,b){return (a.g.s-a.g.os)-(b.g.s-b.g.os);})[0];
+  var bad=G.filter(function(x){return x.g.res===0;}).sort(function(a,b){return b.g.s-a.g.s;})[0];
+  var lk=rows.slice().sort(function(a,b){return b.luck-a.luck;});
+  function T(l,v,s){ return '<div class="tile"><div class="l">'+l+'</div><div class="v">'+v+'</div><div class="s">'+s+'</div></div>'; }
+  if (hi) notes.push(T('Highest score',f2(hi.g.s),esc(state.teams[hi.i].name)+' \u00b7 W'+(hi.k+1)));
+  if (lo) notes.push(T('Lowest score',f2(lo.g.s),esc(state.teams[lo.i].name)+' \u00b7 W'+(lo.k+1)));
+  if (big) notes.push(T('Biggest blowout',f1(big.g.s-big.g.os)+' pts',esc(state.teams[big.i].name)+' over '+esc(big.g.opp.name)+' \u00b7 W'+(big.k+1)));
+  if (close) notes.push(T('Closest game',f2(close.g.s-close.g.os)+' pts',esc(state.teams[close.i].name)+' over '+esc(close.g.opp.name)+' \u00b7 W'+(close.k+1)));
+  if (bad) notes.push(T('Best score in a loss',f2(bad.g.s),esc(state.teams[bad.i].name)+' lost to '+esc(bad.g.opp.name)+' \u00b7 W'+(bad.k+1)));
+  if (lk.length){ notes.push(T('Luckiest',esc(lk[0].name),sgn(lk[0].luck)+' wins vs all-play')); notes.push(T('Unluckiest',esc(lk[lk.length-1].name),sgn(lk[lk.length-1].luck)+' wins vs all-play')); }
+  return '<div class="panel" style="margin-top:18px"><div class="ph"><h2>League notes</h2><span class="sub">Weeks 1\u2013'+w+'</span></div><div class="grid">'+notes.join('')+'</div></div>';
+}
+function vMatch(w){
+  if(!w) return '<div class="panel"><div class="note">No scores yet.</div></div>';
+  var seen={}, cards=[], k=w-1;
+  state.teams.forEach(function(t,i){
+    var o=t.opp[k]?byId(t.opp[k]):null; if(!o||seen[t.id]) return; seen[t.id]=seen[o.id]=1;
+    var oi=state.teams.indexOf(o), a=num(t.scores[k]), b=num(o.scores[k]); if(a===null||b===null) return;
+    var pair=[[t,i,a],[o,oi,b]]; var wn=a>b?0:b>a?1:-1;
+    cards.push('<div class="card">'+pair.map(function(p,j){
+      return '<div class="side '+(wn===j?'win':wn===-1?'':'lose')+'"><span class="mk">'+(wn===j?'W':'')+'</span>'+av(p[1])+'<span class="tn">'+esc(p[0].name)+'</span><span class="sub">#'+rowOf(w,p[1]).power+'</span><span class="sc">'+f2(p[2])+'</span></div>';
+    }).join('')+'<div class="ft">Margin '+f2(Math.abs(a-b))+'</div></div>');
+  });
+  return '<div class="panel"><div class="ph"><h2>Week '+w+' matchups</h2><span class="sub">Pick another week with the numbers at the top</span></div><div class="mu">'+(cards.join('')||'<div class="p">No matchups entered for this week.</div>')+'</div></div>';
+}
+function vTrend(w){
+  if(!w) return '<div class="panel"><div class="note">Trends appear after week 1.</div></div>';
+  var N=state.teams.length, W=800, H=60+N*32, L=40, R=130, T=24, B=28, mode=trendMode;
+  var rmin=1e9, rmax=-1e9;
+  if (mode==='rating') for (var q=1;q<=w;q++) at(q).rows.forEach(function(r){ rmin=Math.min(rmin,r.rating); rmax=Math.max(rmax,r.rating); });
+  var x=function(k){ return w===1?L+(W-L-R)/2:L+(W-L-R)*k/(w-1); };
+  var y=function(r){ return mode==='rank'? T+(H-T-B)*(r.power-1)/Math.max(N-1,1) : T+(H-T-B)*(1-(r.rating-rmin)/((rmax-rmin)||1)); };
+  var s='<svg viewBox="0 0 '+W+' '+H+'" width="100%" role="img" aria-label="Power trend">';
+  if (mode==='rank') for (var r0=1;r0<=N;r0++){ var yy=T+(H-T-B)*(r0-1)/Math.max(N-1,1); s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy+'" y2="'+yy+'" stroke="var(--line)"/><text x="'+(L-10)+'" y="'+(yy+4)+'" text-anchor="end">'+r0+'</text>'; }
+  else for (var g=0;g<=4;g++){ var v=rmin+(rmax-rmin)*g/4, yy2=T+(H-T-B)*(1-g/4); s+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+yy2+'" y2="'+yy2+'" stroke="var(--line)"/><text x="'+(L-8)+'" y="'+(yy2+4)+'" text-anchor="end">'+Math.round(v)+'</text>'; }
+  for (var k=0;k<w;k++) s+='<text x="'+x(k)+'" y="'+(H-8)+'" text-anchor="middle">W'+(k+1)+'</text>';
+  var ends=[];
+  state.teams.forEach(function(t,i){
+    var pts=[]; for (var k2=1;k2<=w;k2++){ var rr=rowOf(k2,i); pts.push([x(k2-1),y(rr)]); }
+    var on=hl===null||hl===i;
+    s+='<g opacity="'+(on?1:0.15)+'"><polyline fill="none" stroke="'+col(i)+'" stroke-width="'+(hl===i?4.5:2.6)+'" stroke-linejoin="round" stroke-linecap="round" points="'+pts.map(function(p){return p[0]+','+p[1];}).join(' ')+'"/>';
+    pts.forEach(function(p){ s+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(hl===i?5:3.5)+'" fill="'+col(i)+'"/>'; });
+    ends.push({i:i,y:pts[pts.length-1][1],x:pts[pts.length-1][0],on:on}); s+='</g>';
+  });
+  ends.sort(function(a,b){return a.y-b.y;}); for (var e=1;e<ends.length;e++) if (ends[e].y-ends[e-1].y<12) ends[e].y=ends[e-1].y+12;
+  ends.forEach(function(p){ s+='<text opacity="'+(p.on?1:0.25)+'" x="'+(p.x+10)+'" y="'+(p.y+4)+'" style="fill:var(--fg)">'+esc(short(state.teams[p.i].name))+'</text>'; });
+  s+='</svg>';
+  var leg='<div class="legend">'+state.teams.map(function(t,i){ return '<button data-t="'+i+'"'+(hl===i?' style="font-weight:600"':'')+'><i style="background:'+col(i)+'"></i>'+esc(short(t.name))+'</button>'; }).join('')+'</div>';
+  return '<div class="panel"><div class="ph"><h2>Power trend</h2><div class="seg"><button data-tm="rank" aria-pressed="'+(mode==='rank')+'">Rank</button><button data-tm="rating" aria-pressed="'+(mode==='rating')+'">Rating</button></div></div><div class="scroll" style="padding:8px 12px"><div style="min-width:560px">'+s+'</div></div>'+leg+'<div class="note">Click a name to highlight a team.</div></div>';
+}
+function vScores(w){
+  if(!w) return '<div class="panel"><div class="note">No scores yet.</div></div>';
+  var last=lastWeek(), N=state.teams.length;
+  var wk=[]; for (var k=0;k<last;k++) wk.push(state.teams.map(function(t){var s=num(t.scores[k]);return s===null?-1:s;}));
+  var h='<div class="panel"><div class="ph"><h2>Results by week</h2></div><div class="scroll"><table><thead><tr><th>Team</th>';
+  for (var j=0;j<last;j++) h+='<th class="n">W'+(j+1)+'</th>';
+  h+='<th class="n">Total</th><th class="n">Avg</th><th class="n">High</th><th class="n">Low</th></tr></thead><tbody>';
+  at(last).rows.forEach(function(r){
+    var t=state.teams[r.i]; h+='<tr class="row'+(hl===r.i?' sel':'')+'" data-t="'+r.i+'"><td><div class="tm">'+av(r.i)+'<span class="tn">'+esc(t.name)+'</span></div></td>';
+    for (var q=0;q<last;q++){ var g=game(t,q); if(!g){ h+='<td class="heat">\u2013</td>'; continue; }
+      var rk=1+wk[q].filter(function(y){return y>g.s;}).length, tier=rk<=2?'background:color-mix(in srgb,var(--up) 28%,transparent);':(rk>=N-1?'background:color-mix(in srgb,var(--down) 26%,transparent);':'');
+      h+='<td class="heat" style="'+tier+'"><span class="rb '+(g.res===1?'w':g.res===0?'l':'')+'">'+(g.res===1?'W':g.res===0?'L':g.res===0.5?'T':'')+'</span> <b>'+f1(g.s)+'</b></td>'; }
+    var rr=rowOf(last,r.i); h+='<td class="n mono">'+f1(rr.pf)+'</td><td class="n mono">'+f1(rr.avg)+'</td><td class="n mono">'+f1(rr.high)+'</td><td class="n mono">'+f1(rr.low)+'</td></tr>';
+  });
+  return h+'</tbody></table></div><div class="note">Green marks the two highest scores of each week and red the two lowest. Teams appear in current power order.</div></div>';
+}
+
+function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; var t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function vOutlook(w){
+  if(!w) return '<div class="panel"><div class="note">Outlook appears after week 1.</div></div>';
+  var W=state.w, R=Math.max(W.reg,w), N=state.teams.length, spots=Math.min(W.spots,N), rows=at(w).rows, SIMS=4000, rand=rng(2026+w);
+  function norm(){ var u=0,v=0; while(!u) u=rand(); while(!v) v=rand(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  var lgsd=Math.sqrt(mean(rows.map(function(r){return r.sd*r.sd;}))) || 25;
+  var mu=rows.map(function(r){ return 0.65*r.avg+0.35*r.form; });
+  var sd=rows.map(function(r){ return Math.sqrt(0.5*r.sd*r.sd+0.5*lgsd*lgsd); });
+  var pf0=rows.map(function(r){return r.pf;}), w0=rows.map(function(r){return r.wins+r.ties/2;});
+  var po=rows.map(function(){return 0;}), top=rows.map(function(){return 0;}), sumW=rows.map(function(){return 0;}), dist=rows.map(function(){return [];});
+  var idx=rows.map(function(_,k){return k;});
+  for (var s=0;s<SIMS;s++){
+    var win=w0.slice(), pf=pf0.slice();
+    for (var wk=w; wk<R; wk++){
+      for (var a=N-1;a>0;a--){ var b=Math.floor(rand()*(a+1)), tmp=idx[a]; idx[a]=idx[b]; idx[b]=tmp; }
+      var sc=[]; for (var q=0;q<N;q++) sc[q]=mu[q]+sd[q]*norm();
+      for (var p=0;p+1<N;p+=2){ var i=idx[p], j=idx[p+1]; pf[i]+=sc[i]; pf[j]+=sc[j]; if (sc[i]>sc[j]) win[i]++; else win[j]++; }
+    }
+    var ord=idx.slice().sort(function(x,y){ return win[y]-win[x]||pf[y]-pf[x]; });
+    ord.forEach(function(t,pos){ if(pos<spots) po[t]++; if(pos===0) top[t]++; });
+    for (var t2=0;t2<N;t2++){ sumW[t2]+=win[t2]; dist[t2].push(win[t2]); }
+  }
+  var out=rows.map(function(r,k){ var d=dist[k].slice().sort(function(a,b){return a-b;}); return {r:r,po:po[k]/SIMS,top:top[k]/SIMS,ew:sumW[k]/SIMS,lo:d[Math.floor(SIMS*0.1)],hi:d[Math.floor(SIMS*0.9)]}; });
+  out.sort(function(a,b){ return b.po-a.po||b.ew-a.ew; });
+  function sl(k,l,min,max){ return '<div class="slider"><label for="s_'+k+'">'+l+'</label><input id="s_'+k+'" type="range" min="'+min+'" max="'+max+'" step="1" value="'+W[k]+'" data-w="'+k+'"><span class="mono" id="v_'+k+'">'+W[k]+'</span></div>'; }
+  var h='<div class="panel"><div class="ph"><h2>Season outlook after week '+w+'</h2><span class="sub">'+SIMS+' simulated seasons</span></div><div class="mth" style="padding-bottom:4px"><div>'+sl('spots','Playoff spots',2,Math.max(2,N-1))+'</div><div>'+sl('reg','Regular-season weeks',w,17)+'</div></div><div class="scroll"><table><thead><tr><th>Team</th><th class="n">Now</th><th class="n">Proj. wins</th><th class="n">Range (10-90%)</th><th>Playoff odds</th><th class="n">#1 seed</th><th class="n">Power #</th></tr></thead><tbody>';
+  out.forEach(function(o){
+    h+='<tr class="row'+(hl===o.r.i?' sel':'')+'" data-t="'+o.r.i+'"><td><div class="tm">'+av(o.r.i)+'<span class="tn">'+esc(o.r.name)+'</span></div></td><td class="n mono">'+rec(o.r)+'</td><td class="n mono">'+f1(o.ew)+'</td><td class="n mono">'+o.lo+' to '+o.hi+'</td>'
+     +'<td class="mono">'+Math.round(o.po*100)+'%<span class="bar"><i style="width:'+Math.round(o.po*100)+'%"></i></span></td><td class="n mono">'+Math.round(o.top*100)+'%</td><td class="n mono">'+o.r.power+'</td></tr>';
+  });
+  return h+'</tbody></table></div><div class="note">Each remaining week, teams are paired at random and each score is drawn from a normal curve centered on 65% season PPG and 35% recent PPG, with spread blended between the team and the league. Seeds go by wins, then points for. The real remaining schedule and playoff format will sharpen this. Treat early-season odds as rough.</div></div>';
+}
+/* ---------- week 6 intel (ESPN box scores + transaction log) ---------- */
+var W6 = [
+ [["Matt Ender",145.14,[["RB","James Cook III","RB",24.3,20.4,""],["WR","Nico Collins","WR",10.9,17.5,""],["WR","Luther Burden III","WR",17.5,12.7,""],["RB","Jaylen Warren","RB",9.8,15.4,""],["TE","Dalton Kincaid","TE",10.8,8.8,""],["QB","Bryce Young","QB",19.84,18.8,""],["BE","RJ Harvey","RB",14.6,9.5,""],["IR","Caleb Williams","QB",18.5,17.2,""],["FLEX","Carnell Tate","WR",19,11.2,""],["FLEX","Xavier Worthy","WR",14.3,11.3,""],["DST","Seahawks D/ST","DST",3,6.1,""],["BE","Colston Loveland","TE",18.5,8.7,""],["FLEX","Rachaad White","RB",15.7,10.7,""],["BE","Tyjae Spears","RB",1.8,8.8,""]]],["Austin Mayland",134.6,[["RB","Bijan Robinson","RB",7.3,24,""],["TE","Trey McBride","TE",12.3,17.5,""],["FLEX","CeeDee Lamb","WR",16,19.3,""],["WR","Zay Flowers","WR",12.7,14.5,""],["QB","Jayden Daniels","QB",23,20.6,""],["BE","TreVeyon Henderson","RB",3,8.9,""],["WR","Romeo Doubs","WR",11.2,9.5,"INJURY_RESERVE"],["FLEX","Alvin Kamara","RB",14.9,10.2,""],["FLEX","Keenan Allen","WR",16.2,9.5,""],["BE","Brian Robinson Jr.","RB",3,7.7,""],["RB","Kendre Miller","RB",9,9.3,""],["DST","Chiefs D/ST","DST",12,7.5,""]]]],
+ [["Dean Mizrahi",112.88,[["FLEX","Puka Nacua","WR",14,23.7,""],["FLEX","Terry McLaurin","WR",3.7,12.7,"DOUBTFUL"],["WR","Josh Downs","WR",8.7,10.1,""],["TE","George Kittle","TE",17.9,15.3,""],["QB","Matthew Stafford","QB",16.88,20.5,""],["WR","Matthew Golden","WR",24.4,16.2,""],["FLEX","Dallas Goedert","TE",12.1,10.3,""],["BE","Oronde Gadsden","TE",4.7,3.2,""],["RB","Emanuel Wilson","RB",5.2,15.4,""],["DST","Steelers D/ST","DST",9,7.8,""],["RB","MarShawn Lloyd","RB",1,11.2,""]]],["Jorge Fernandez",110.48,[["FLEX","A.J. Brown","WR",5.7,13,"QUESTIONABLE"],["DST","Texans D/ST","DST",1,6.4,""],["BE","Chris Godwin Jr.","WR",7.7,6.6,""],["RB","Bucky Irving","RB",6.9,16.7,""],["BE","Stefon Diggs","WR",16.4,10.8,""],["WR","Mike Evans","WR",12.4,15.3,"QUESTIONABLE"],["RB","Chuba Hubbard","RB",21.1,15.3,""],["BE","Blake Corum","RB",14,9.1,""],["WR","Jalen Coker","WR",15.7,14.3,""],["QB","Patrick Mahomes","QB",10.48,19.3,""],["FLEX","Devaughn Vele","WR",7.2,11.3,""],["FLEX","Tre Tucker","WR",26.7,10.4,""],["TE","Jake Ferguson","TE",3.3,7,""]]]],
+ [["Jordan Lande",111.84,[["RB","Derrick Henry","RB",5,19.3,""],["RB","Kyren Williams","RB",9.7,21.6,""],["WR","Rome Odunze","WR",6.9,10.6,""],["BE","Courtland Sutton","WR",3.9,8.5,""],["WR","DK Metcalf","WR",20.3,11.9,""],["FLEX","Rhamondre Stevenson","RB",3.6,13.6,""],["IR","Rico Dowdle","RB",7.9,6.5,""],["FLEX","Jakobi Meyers","WR",13.3,9.7,""],["FLEX","Germie Bernard","WR",25.7,10,""],["TE","Pat Freiermuth","TE",3.1,11.2,""],["QB","Jordan Love","QB",20.24,22,""],["DST","Jets D/ST","DST",4,7,""]]],["Bryan Rosen",110.32,[["FLEX","Ashton Jeanty","RB",15.8,19.6,""],["WR","Jaxon Smith-Njigba","WR",27.4,20.6,""],["FLEX","Ladd McConkey","WR",2.7,10.6,"QUESTIONABLE"],["QB","Dak Prescott","QB",11.02,17.7,""],["RB","D'Andre Swift","RB",23,15.5,""],["WR","Parker Washington","WR",10.4,15.9,""],["TE","Harold Fannin Jr.","TE",1.9,10.4,""],["RB","J.K. Dobbins","RB",13.6,10.6,""],["BE","Mike Washington Jr.","RB",6,4.1,""],["FLEX","Denzel Boston","WR",2.5,13.9,""],["DST","Colts D/ST","DST",2,6,""],["BE","Hunter Henry","TE",14.8,7.8,""],["BE","Khalil Shakir","WR",13.4,11.8,""]]]],
+ [["Edsall Hilty",145.84,[["WR","George Pickens","WR",13.3,13.9,""],["FLEX","Christian Watson","WR",9.4,16.8,""],["WR","Malik Nabers","WR",30.5,17.9,""],["BE","Omarion Hampton","RB",7.9,9.2,""],["FLEX","Chris Olave","WR",14.3,18,""],["TE","Isaiah Likely","TE",23.9,15.1,""],["BE","Jaylen Waddle","WR",6.4,9.7,""],["RB","Javonte Williams","RB",13,17.3,""],["DST","Rams D/ST","DST",2,7.4,""],["BE","Kenny Gainwell","RB",3.4,8.9,""],["RB","Woody Marks","RB",10.1,11.8,""],["BE","Keaton Mitchell","RB",0.4,7.7,""],["FLEX","Juwan Johnson","TE",0,10.9,""],["QB","Trevor Lawrence","QB",29.34,18.2,""],["BE","Emmett Johnson","RB",4.4,5.2,""]]],["Kenny Keller",104.7,[["QB","Drake Maye","QB",23.8,20.9,""],["TE","Brock Bowers","TE",11,20.4,""],["WR","Davante Adams","WR",6.9,16.6,"OUT"],["RB","Kenneth Walker III","RB",29.9,24.3,""],["FLEX","Tee Higgins","WR",null,0,""],["WR","Marvin Harrison Jr.","WR",6.4,3.6,""],["FLEX","Travis Kelce","TE",9.3,11.7,""],["DST","Patriots D/ST","DST",5,7.1,""],["RB","Braelon Allen","RB",12.4,14.9,""],["FLEX","Tyreek Hill","WR",null,null,"QUESTIONABLE"],["BE","Josh Jacobs","RB",0,0,"DAY_TO_DAY"]]]],
+ [["Jordan Schneider",150.06,[["RB","Christian McCaffrey","RB",30.7,21.8,""],["WR","Emeka Egbuka","WR",17.8,11.2,""],["FLEX","Tetairoa McMillan","WR",14.6,16.5,""],["WR","Drake London","WR",12.2,16.5,""],["FLEX","DeVonta Smith","WR",20.5,13.9,""],["BE","Cam Skattebo","RB",0,9.2,""],["TE","Tucker Kraft","TE",8.7,12.3,""],["QB","Brock Purdy","QB",17.36,22.1,""],["BE","Kaelon Black","RB",4.7,5.8,""],["BE","Justin Herbert","QB",8.76,11.9,""],["FLEX","Wan'Dale Robinson","WR",5.2,9.5,""],["DST","Ravens D/ST","DST",8,7.6,""],["RB","Dameon Pierce","RB",15,12.7,""],["BE","Browns D/ST","DST",8,6.3,""]]],["Andrew Goldsmith",100.6,[["RB","Jonathan Taylor","RB",21.1,20.3,""],["QB","Josh Allen","QB",18.3,25.9,""],["RB","Bhayshul Tuten","RB",24.7,13.1,""],["WR","Garrett Wilson","WR",8.4,15.3,""],["FLEX","Tony Pollard","RB",7.6,14.8,""],["WR","Michael Wilson","WR",7.2,14.4,""],["TE","Tyler Higbee","TE",4.2,7.2,""],["FLEX","Brandin Cooks","WR",2.3,6.2,""],["DST","Giants D/ST","DST",1,6.6,""],["BE","Ja'Kobi Lane","WR",8,4.7,""],["FLEX","Tyler Allgeier","RB",5.8,12.7,""]]]]
+];
+/* waiver moves processed Oct 14-18: [day, team, added, dropped, FAAB $] */
+var TX6 = [
+ ["Oct 18","Matt Ender","Tyjae Spears","Jaleel McLaughlin",0],["Oct 18","Edsall Hilty","Emmett Johnson","Tyler Shough",0],["Oct 18","Jordan Schneider","Browns D/ST","Kenyon Sadiq",0],["Oct 18","Jorge Fernandez","Jake Ferguson","KC Concepcion",1],
+ ["Oct 17","Kenny Keller","Josh Jacobs","Rashod Bateman",112],
+ ["Oct 16","Matt Ender","Rachaad White","Josh Jacobs",0],["Oct 16","Bryan Rosen","Khalil Shakir","49ers D/ST",0],["Oct 16","Jordan Lande","Jets D/ST","Bengals D/ST",0],["Oct 16","Andrew Goldsmith","Tyler Allgeier","Brenton Strange",2],["Oct 16","Edsall Hilty","Trevor Lawrence","Seth McGowan",5],
+ ["Oct 15","Matt Ender","Colston Loveland","Trevor Lawrence",15],["Oct 15","Andrew Goldsmith","Ja'Kobi Lane","Roman Wilson",0],["Oct 15","Andrew Goldsmith","Giants D/ST","Bears D/ST",0],
+ ["Oct 14","Matt Ender","Seahawks D/ST","Cowboys D/ST",0],["Oct 14","Bryan Rosen","Hunter Henry","",0],["Oct 14","Andrew Goldsmith","Brandin Cooks","Tyler Allgeier",0],["Oct 14","Andrew Goldsmith","Tyler Higbee","T.J. Hockenson",0],["Oct 14","Jordan Schneider","Dameon Pierce","Deebo Samuel Sr.",1]
+];
+var STORY6 = [
+ {h:"Ender's waiver wire beats Mayland's Bijan problem",
+  t:"Credit where due: Ender dumped Josh Jacobs on Friday, grabbed Rachaad White, and watched him post 15.7 from a flex spot. Carnell Tate (19.0) joined in and Ender won by 10.5. Austin started Bijan Robinson, who scored 7.3 on a 24.0 projection. That 16.7-point face-plant is bigger than the margin. Keenan Allen (16.2) and Alvin Kamara (14.9) fought hard from the flex spots, and Romeo Doubs deserves a thank-you note for 11.2 on an IR designation. Ender also left Colston Loveland's 18.5 on the bench, because why not win with style."},
+ {h:"Mizrahi wins by 2.4, Fernandez wins the benching award",
+  t:"Dean survived 14.0 from Puka Nacua and 1.0 from MarShawn Lloyd, which is a sentence nobody should win after. Matthew Golden (24.4) and George Kittle (17.9) made it work. Jorge started A.J. Brown (5.7) and Devaughn Vele (7.2) while Stefon Diggs (16.4) and Blake Corum (14.0) watched from the bench. Either swap flips the game. In his defense, Tre Tucker was magnificent at 26.7 and Chuba Hubbard added 21.1. Mahomes gave him 10.5, which is just rude."},
+ {h:"Lande wins by 1.5, Rosen needs a lineup therapist",
+  t:"Derrick Henry (5.0) and Kyren Williams (9.7) fell 26.2 points short of projection and Lande still won, which says something about his luck and a lot about Germie Bernard (25.7) and DK Metcalf (20.3). Bryan Rosen lost by 1.5 while Hunter Henry (14.8) and Khalil Shakir (13.4), both waiver adds he made this week, sat on his bench behind Harold Fannin (1.9) and Ladd McConkey (2.7). Great scouting, shaky follow-through. Jaxon Smith-Njigba (27.4) and D'Andre Swift (23.0) deserved better."},
+ {h:"Pickens bullies Keller, who starts two empty seats",
+  t:"Edsall picked up Trevor Lawrence for $5 after Ender cut him, and Lawrence repaid him with 29.3. Malik Nabers (30.5) and Isaiah Likely (23.9) made it a laugher, so well played. Kenny started Tee Higgins and Tyreek Hill, got zero from both, and lost by 41.1. Kenneth Walker (29.9) and Drake Maye (23.8) did their best to help. The $112 of FAAB on Josh Jacobs bought a 0.0 on the bench and a day-to-day tag. Bold spending."},
+ {h:"Schneider throws the week's loudest punch",
+  t:"Christian McCaffrey posted 30.7, the best score anyone had all week, and Schneider won by 49.5, so enjoy the trophy-case energy. DeVonta Smith (20.5), Emeka Egbuka (17.8) and waiver find Dameon Pierce (15.0) all beat projection. Andrew Goldsmith got a huge 24.7 from Bhayshul Tuten and very little else. Josh Allen was 7.6 under projection, and his waiver adds produced 2.3 (Cooks), 4.2 (Higbee), 5.8 (Allgeier) and 1.0 (Giants D/ST), with Ja'Kobi Lane's 8.0 sitting on the bench. Busy hands, quiet results."}
+];
+function optimal(players){
+  var ok=players.filter(function(x){return x[0]!=='IR'&&x[3]!==null;}).slice().sort(function(a,b){return b[3]-a[3];});
+  var used=[], total=0;
+  function take(pos,n){ var c=0; ok.forEach(function(x){ if(c<n && x[2]===pos && used.indexOf(x)<0){ used.push(x); total+=x[3]; c++; } }); }
+  take('QB',1); take('RB',2); take('WR',2); take('TE',1); take('DST',1);
+  var f=0; ok.forEach(function(x){ if(f<3 && used.indexOf(x)<0 && (x[2]==='RB'||x[2]==='WR'||x[2]==='TE')){ used.push(x); total+=x[3]; f++; } });
+  return total;
+}
+var RAW = `#1
+Jordan Schneider~96.64~R|Saquon Barkley|R|9|18.3|O;R|Christian McCaffrey|R|13.8|18.9|;W|Emeka Egbuka|W|11.3|14.5|;W|Tetairoa McMillan|W|10.5|15.3|;F|Drake London|W|5.5|14.2|;F|DeVonta Smith|W|8.3|15.3|;F|Cam Skattebo|R|14.1|14.1|;B|Kyler Murray|Q|-0.38|16.8|;T|Tucker Kraft|T|9.5|9.1|;D|Eagles D/ST|D|3|6.3|;B|Brock Purdy|Q|21.1|16|;B|Makai Lemon|W|2.5|8.6|;B|De'Zhaun Stribling|W|0|9.8|R;B|Deebo Samuel Sr.|W|18|9|O;Q|Baker Mayfield|Q|11.64|16.8|O
+Matt Ender~159.5~R|Jahmyr Gibbs|R|35.6|23.3|;R|James Cook III|R|9.9|16.4|;W|Nico Collins|W|21.2|16.1|;B|Bo Nix|Q|5.44|16.6|;F|Xavier Worthy|W|4.8|9.7|;W|Luther Burden III|W|9.5|12.3|;F|Alec Pierce|W|10.1|9.9|R;Q|Trevor Lawrence|Q|26.1|17.3|;F|Jaylen Warren|R|10.3|12.9|;D|Jaguars D/ST|D|12|7.9|;T|Dalton Kincaid|T|20|8.8|;B|Rachaad White|R|4.7|8.9|;B|Tyler Allgeier|R|9|7.6|;B|Chris Bell|W|3.5|7.4|
+Edsall Hilty~160.36~W|George Pickens|W|5.8|15.2|;F|Christian Watson|W|34.7|11.1|;W|Malik Nabers|W|12.9|13|;R|Omarion Hampton|R|8.3|18.1|;F|Chris Olave|W|30.2|15.3|;Q|Justin Herbert|Q|13.26|19.5|;T|Isaiah Likely|T|27.8|9.6|;F|Jaylen Waddle|W|1.2|12.5|;R|Javonte Williams|R|24.2|15.8|;B|Caleb Williams|Q|37.26|16.8|;D|Rams D/ST|D|2|6.7|;B|Kenny Gainwell|R|2.8|12.2|;B|Chris Rodriguez Jr.|R|2.3|5.9|;B|Woody Marks|R|5|8.4|;B|Ray Davis|R|0.3|5.1|
+Andrew Goldsmith~148.26~W|Amon-Ra St. Brown|W|28.7|19.5|;R|Jonathan Taylor|R|25.1|18.4|;Q|Josh Allen|Q|37.66|19.8|;T|Kyle Pitts Sr.|T|0|10|;R|Bhayshul Tuten|R|9.8|12.3|;W|Garrett Wilson|W|13.9|15.2|;B|Jeremiyah Love|R|13|14.1|O;B|Khalil Shakir|W|9|9.6|;B|Tony Pollard|R|4.4|11.9|;F|Wan'Dale Robinson|W|8.8|10.6|;F|MarShawn Lloyd|R|3.7|13.1|;F|Michael Wilson|W|10.6|10.7|;B|KC Concepcion|W|7.8|9.2|;B|Jake Ferguson|T|2.6|9.9|;D|Lions D/ST|D|10|7.3|
+Jordan Lande~105.96~R|Derrick Henry|R|37.3|17.1|;R|Kyren Williams|R|15.5|14|;W|Ja'Marr Chase|W|3.2|20.7|;W|Rome Odunze|W|7.2|12.7|;T|Colston Loveland|T|0|12.3|;F|Courtland Sutton|W|3.1|11.9|;Q|Joe Burrow|Q|14.16|18.7|;F|DK Metcalf|W|8|12.5|;F|Rhamondre Stevenson|R|14.5|14.3|;B|Jameson Williams|W|8.5|12.4|;D|Broncos D/ST|D|3|6.3|;B|Rico Dowdle|R|4.1|12.9|;B|Jacory Croskey-Merritt|R|12.6|8.5|R;B|Jakobi Meyers|W|12.2|10.6|;B|Mark Andrews|T|8.9|10.2|
+Kenny Keller~124.72~Q|Drake Maye|Q|9.82|16.8|;W|Davante Adams|W|5.6|14.2|O;F|Kenneth Walker III|R|36.1|15.1|;F|Rashee Rice|W|9.9|14.7|O;W|Tee Higgins|W|8.9|13.2|;R|Quinshon Judkins|R|7|13.6|O;R|David Montgomery|R|28.9|13|O;B|Jonathon Brooks|R|7.2|10.9|R;F|Marvin Harrison Jr.|W|4.3|11.8|;B|Travis Kelce|T|10.1|9.9|;D|Patriots D/ST|D|5|5.6|;B|Jerry Jeudy|W|4.6|8.3|;B|Jonah Coleman|R|0|4.2|R;T|Michael Mayer|T|9.2|9.4|
+Dean Mizrahi~146.06~R|Chase Brown|R|18.8|16.4|;W|Puka Nacua|W|12.4|21.9|;Q|Lamar Jackson|Q|26.96|19.7|O;W|Terry McLaurin|W|3.4|12.6|D;R|Travis Etienne Jr.|R|14.8|15.5|R;F|Josh Downs|W|5.7|9.2|;F|Jadarian Price|R|7.8|14.5|R;B|George Kittle|T|3.2|8.5|;B|Matthew Stafford|Q|4.1|18.1|;F|Matthew Golden|W|15.5|11.2|;B|Quentin Johnston|W|3.7|10.5|;T|Dallas Goedert|T|23.7|11.1|;B|Jordan Addison|W|0|10.1|Q;B|Jayden Reed|W|5|10.2|R;D|Steelers D/ST|D|17|7|
+Bryan Rosen~200.1~R|Breece Hall|R|21.8|17|O;R|Ashton Jeanty|R|34.7|18.5|;W|Jaxon Smith-Njigba|W|28.2|19.8|;W|Ladd McConkey|W|19.2|14.1|Q;F|DJ Moore|W|23|11.8|O;D|Chargers D/ST|D|1|7.3|;Q|Dak Prescott|Q|14.4|17.3|;F|D'Andre Swift|R|34.4|12.6|;B|Carnell Tate|W|7.8|12.3|;F|Parker Washington|W|19.3|11.6|;T|Harold Fannin Jr.|T|4.1|11.3|;B|J.K. Dobbins|R|3.6|9.8|;B|Mike Washington Jr.|R|4.1|7.6|;B|Kyle Monangai|R|22.4|10.5|O;B|RJ Harvey|R|8.1|8.5|
+Austin Mayland~164.46~R|Bijan Robinson|R|31.3|19.5|;T|Trey McBride|T|24.5|14.7|;W|CeeDee Lamb|W|15.4|17.9|;W|Zay Flowers|W|28|14.7|;Q|Jayden Daniels|Q|17.66|17.3|;F|Michael Pittman Jr.|W|8.8|12.5|R;F|Sam LaPorta|T|9.8|11.1|;D|Seahawks D/ST|D|12|7.5|;F|Brian Thomas Jr.|W|7|10.3|;R|Aaron Jones Sr.|R|10|10.6|;B|Romeo Doubs|W|0|8.3|R;B|Tyjae Spears|R|4.4|9.5|;B|Jordan Love|Q|21.48|15.3|;B|Tank Bigsby|R|0.3|4.5|R
+Jorge Fernandez~150.62~W|A.J. Brown|W|5.6|14.7|Q;R|De'Von Achane|R|10.6|18.9|R;W|Justin Jefferson|W|31.2|17.7|;Q|Jalen Hurts|Q|24.72|21.5|R;D|Texans D/ST|D|-1|6.4|;F|Chris Godwin Jr.|W|8.3|10.4|;R|Bucky Irving|R|20.3|13.9|;T|Tyler Warren|T|10.3|12.4|O;B|Stefon Diggs|W|15.5|9.8|;F|Mike Evans|W|16.9|10.9|Q;F|Chuba Hubbard|R|23.7|12.5|;B|Blake Corum|R|5.4|9.6|;B|Jalen Coker|W|35.8|9.3|;B|Jordan Mason|R|11.9|9.9|R;B|Patrick Mahomes|Q|21.66|15.9|
+#2
+Matt Ender~114.76~R|Jahmyr Gibbs|R|23.3|25.1|;R|James Cook III|R|22.9|19.3|;B|Bo Nix|Q|14.12|19.1|;F|Xavier Worthy|W|13.5|11.2|;W|Luther Burden III|W|6.2|12.7|;W|Alec Pierce|W|2.1|11.3|R;Q|Trevor Lawrence|Q|6.16|16.4|;F|Jaylen Warren|R|9.7|11.7|;T|Dalton Kincaid|T|22.5|10.6|;B|Rachaad White|R|14.3|7.6|;B|Tyler Allgeier|R|3.9|7.2|;D|49ers D/ST|D|7|7.1|;F|Jayden Reed|W|1.4|10.1|R
+Andrew Goldsmith~186.22~W|Amon-Ra St. Brown|W|37.2|21.2|;R|Jonathan Taylor|R|29.2|19.1|;Q|Josh Allen|Q|40.82|23.3|;B|Kyle Pitts Sr.|T|2.5|10.6|;F|Bhayshul Tuten|R|14.2|10.3|;W|Garrett Wilson|W|16.7|16.4|;R|Jeremiyah Love|R|7.5|13.1|O;F|Khalil Shakir|W|6.8|10.5|;B|Tony Pollard|R|7.5|11.5|;B|Wan'Dale Robinson|W|1.9|9.6|;B|MarShawn Lloyd|R|8.6|11.5|;F|Michael Wilson|W|3.8|10.1|;D|Buccaneers D/ST|D|2|7.9|;T|Dalton Schultz|T|28|9|;B|Caleb Douglas|W|3.9|9.6|Q
+Kenny Keller~161.42~Q|Drake Maye|Q|8.02|18.8|;W|Davante Adams|W|41.5|16|O;R|Kenneth Walker III|R|25.8|18.5|;W|Rashee Rice|W|12.3|15.4|O;F|Tee Higgins|W|14.5|12.6|;F|Quinshon Judkins|R|9.8|12.4|O;R|David Montgomery|R|4.4|14.6|O;B|Jonathon Brooks|R|2.1|8.8|R;F|Marvin Harrison Jr.|W|0|9.5|;T|Travis Kelce|T|27.1|10.7|;D|Patriots D/ST|D|18|6.7|;B|Jerry Jeudy|W|0|7.2|;B|Jonah Coleman|R|14.8|6.3|R;B|Pat Bryant|W|1.6|7.3|R
+Jordan Schneider~135.08~R|Saquon Barkley|R|3|18.4|O;R|Christian McCaffrey|R|22.6|22.1|;W|Emeka Egbuka|W|10.3|14.3|;W|Tetairoa McMillan|W|17.1|14.1|;F|Drake London|W|8.9|13.1|;F|DeVonta Smith|W|29.7|14.4|;F|Cam Skattebo|R|9.5|13.3|;T|Tucker Kraft|T|3.5|10.8|;D|Eagles D/ST|D|2|6.9|;Q|Brock Purdy|Q|28.48|21.3|;B|Makai Lemon|W|1.9|9.1|;B|Deebo Samuel Sr.|W|6.5|12.2|O;B|Jaxson Dart|Q|0.8|18.7|R;B|Kaelon Black|R|2.5|8.5|;B|Chiefs D/ST|D|1|7.2|
+Bryan Rosen~149.26~R|Breece Hall|R|14.2|16.3|O;R|Ashton Jeanty|R|10.3|18.8|;W|Jaxon Smith-Njigba|W|44.5|19.2|;F|Ladd McConkey|W|6.5|14.9|Q;W|DJ Moore|W|-0.1|12.9|O;D|Chargers D/ST|D|4|6.9|;Q|Dak Prescott|Q|29.76|20.7|;F|D'Andre Swift|R|12.9|13.9|;B|Carnell Tate|W|5.7|11.7|;F|Parker Washington|W|16.8|12.5|;T|Harold Fannin Jr.|T|10.4|10.2|;B|J.K. Dobbins|R|3.6|13|;B|Mike Washington Jr.|R|0.7|3.9|;B|Kyle Monangai|R|7.8|10|O
+Edsall Hilty~121.12~W|George Pickens|W|10|15.2|;F|Christian Watson|W|14.1|12.8|;W|Malik Nabers|W|1.1|15.4|;R|Omarion Hampton|R|17.5|16.3|;F|Chris Olave|W|22.6|16.5|;B|Justin Herbert|Q|7.88|20.1|;T|Isaiah Likely|T|8.3|11.1|;F|Jaylen Waddle|W|23.8|12.5|;R|Javonte Williams|R|8|17.3|;Q|Caleb Williams|Q|7.72|20|;D|Rams D/ST|D|8|6.4|;B|Kenny Gainwell|R|4.5|9.7|;B|Woody Marks|R|8.5|7.8|;B|Ray Davis|R|0|3.3|;B|Keaton Mitchell|R|4.9|8.1|
+Jorge Fernandez~118.16~R|De'Von Achane|R|12.3|17.7|R;W|Justin Jefferson|W|8.5|19.1|;Q|Jalen Hurts|Q|16.16|20.5|R;D|Texans D/ST|D|5|6.6|;B|Chris Godwin Jr.|W|8.8|10.2|;R|Bucky Irving|R|13|15|;T|Tyler Warren|T|14.4|11.6|O;B|Stefon Diggs|W|21.7|10.5|;F|Mike Evans|W|8.4|13.3|Q;F|Chuba Hubbard|R|14.4|14.9|;B|Blake Corum|R|10.2|10|;W|Jalen Coker|W|14.6|12.2|;B|Patrick Mahomes|Q|30.98|18.7|;F|Devaughn Vele|W|11.4|9.6|;B|Emmett Johnson|R|5.5|6.5|
+Jordan Lande~106.08~R|Derrick Henry|R|17.7|18.5|;R|Kyren Williams|R|15.7|14.8|;W|Ja'Marr Chase|W|26.5|19.8|;W|Rome Odunze|W|7.3|12|;T|Colston Loveland|T|1.3|11.6|;F|Courtland Sutton|W|5.5|12.2|;Q|Joe Burrow|Q|16.18|17|;B|DK Metcalf|W|6.7|12.5|;F|Rhamondre Stevenson|R|3.6|13.2|;F|Jameson Williams|W|5.3|12.7|;D|Broncos D/ST|D|7|6.6|;B|Rico Dowdle|R|6.4|10.4|;B|Jacory Croskey-Merritt|R|5.8|10.4|R;B|Jakobi Meyers|W|3.8|9.9|;B|Mark Andrews|T|10.9|10.5|
+Austin Mayland~151.14~R|Bijan Robinson|R|11.1|23.8|;F|Trey McBride|T|18.1|14.8|;W|CeeDee Lamb|W|37.3|18.6|;Q|Jayden Daniels|Q|14.74|20.5|;F|TreVeyon Henderson|R|13.6|9.5|;T|Sam LaPorta|T|17.2|11.4|;D|Seahawks D/ST|D|7|7.4|;W|Brian Thomas Jr.|W|7|9.9|;R|Aaron Jones Sr.|R|12.5|14.6|;F|Romeo Doubs|W|12.6|10.8|R;B|Alvin Kamara|R|7.2|6.5|;B|Tyjae Spears|R|9|8.7|;B|Jordan Love|Q|13.8|16.5|;B|Chris Brooks|R|3.6|9.8|R
+Dean Mizrahi~71.1~R|Chase Brown|R|11.2|15.8|;Q|Lamar Jackson|Q|14.8|22.4|O;W|Terry McLaurin|W|7|12.8|D;R|Travis Etienne Jr.|R|7.1|13|R;F|Josh Downs|W|14.2|9.6|;F|Jadarian Price|R|5|13.6|R;B|George Kittle|T|18|10.7|;B|Matthew Stafford|Q|28.98|18.9|;B|Matthew Golden|W|9.8|11.1|;F|Quentin Johnston|W|2.4|10.1|;T|Dallas Goedert|T|1.4|11|;B|Jordan Addison|W|4.1|10.8|Q;D|Ravens D/ST|D|3|7.1|;W|Malachi Fields|W|5|6.2|
+#3
+Kenny Keller~144.76~Q|Drake Maye|Q|3.76|19.4|;F|Brock Bowers|T|29.6|14.5|;W|Davante Adams|W|22.7|16.2|O;R|Kenneth Walker III|R|21.3|21.8|;W|Rashee Rice|W|15.8|13|O;F|Tee Higgins|W|21|13|;F|Quinshon Judkins|R|9.9|14.2|O;R|David Montgomery|R|6.8|12.4|O;B|Marvin Harrison Jr.|W|7|7.1|;T|Travis Kelce|T|13.9|12.9|;D|Patriots D/ST|D|0|6.1|;B|Rashod Bateman|W|5.7|8.9|Q;B|Braelon Allen|R|4.7|6.7|
+Matt Ender~143.54~R|Jahmyr Gibbs|R|41.4|26.5|;R|James Cook III|R|21.4|17.6|;W|Xavier Worthy|W|4|11.6|;W|Luther Burden III|W|19.8|11.4|;B|Trevor Lawrence|Q|19.78|18|;F|Jaylen Warren|R|22.6|16.3|;T|Dalton Kincaid|T|3.8|11.9|;B|Rachaad White|R|11.1|9.4|;D|49ers D/ST|D|1|6.9|;F|Dontayvion Wicks|W|5.2|10.1|;Q|Bryce Young|Q|13.64|17.2|;F|RJ Harvey|R|10.7|9.2|;B|Carnell Tate|W|11.8|12.1|
+Andrew Goldsmith~153.16~W|Amon-Ra St. Brown|W|11.9|20.6|;R|Jonathan Taylor|R|9.2|21.5|;Q|Josh Allen|Q|17.46|24.2|;B|Kyle Pitts Sr.|T|1.5|10.1|;F|Bhayshul Tuten|R|17|11.3|;W|Garrett Wilson|W|28.7|16.6|;R|Jeremiyah Love|R|21.9|13|O;B|Tony Pollard|R|13.6|10.9|;F|Michael Wilson|W|25.9|11.6|;T|Dalton Schultz|T|6|11.2|;B|Keon Coleman|W|4.7|6.4|;F|Malik Washington|W|11.1|10.1|;D|Panthers D/ST|D|4|7|;B|Tre Tucker|W|8.3|10|;B|Tyler Allgeier|R|4.9|7.6|
+Bryan Rosen~156.4~R|Breece Hall|R|8.5|16.6|O;R|Ashton Jeanty|R|12.3|19.4|;W|Jaxon Smith-Njigba|W|37.36|21.7|;F|Ladd McConkey|W|10.6|13.9|Q;W|DJ Moore|W|12.7|12.9|O;Q|Dak Prescott|Q|18.94|17.7|;B|D'Andre Swift|R|10.8|13.2|;F|Parker Washington|W|13|15.5|;T|Harold Fannin Jr.|T|24.1|9.9|;B|J.K. Dobbins|R|6.3|11.3|;B|Mike Washington Jr.|R|11.4|3.7|;B|Kyle Monangai|R|3.1|8.6|O;B|Denzel Boston|W|8.1|11.6|;D|Vikings D/ST|D|17|7.2|;F|Terrance Ferguson|T|1.9|10.8|R
+Jordan Schneider~146.28~R|Saquon Barkley|R|9|18.1|O;R|Christian McCaffrey|R|21.6|21.4|;F|Emeka Egbuka|W|11.2|12.7|;W|Tetairoa McMillan|W|3.7|14.7|;W|Drake London|W|30.4|15.9|;F|DeVonta Smith|W|12.5|16.1|;F|Cam Skattebo|R|13|14.5|;B|Kyler Murray|Q|10.42|17.9|;T|Tucker Kraft|T|6.6|10.4|;Q|Brock Purdy|Q|31.28|21.5|;B|Deebo Samuel Sr.|W|15.4|12.6|O;B|Kaelon Black|R|1.7|7.6|;D|Chiefs D/ST|D|7|7.5|;B|KC Concepcion|W|2.9|11.1|;B|Justin Herbert|Q|12.74|17.8|
+Jorge Fernandez~90.12~R|De'Von Achane|R|1.7|20.1|R;W|Justin Jefferson|W|5.2|19|;Q|Jalen Hurts|Q|12.62|20.3|R;D|Texans D/ST|D|10|6.7|;B|Chris Godwin Jr.|W|5.5|8.9|;R|Bucky Irving|R|7.8|16.3|;T|Tyler Warren|T|14.7|12.5|O;B|Stefon Diggs|W|7.3|11|;F|Mike Evans|W|12.4|12.8|Q;F|Chuba Hubbard|R|15|15|;B|Blake Corum|R|3.5|9.3|;W|Jalen Coker|W|3.8|14.1|;B|Patrick Mahomes|Q|15.94|20.2|;F|Devaughn Vele|W|6.9|11.7|;B|Emmett Johnson|R|1.7|6.2|
+Edsall Hilty~127.5~W|George Pickens|W|15.2|14.2|;F|Christian Watson|W|22.6|14.4|;W|Malik Nabers|W|7.6|14.9|;R|Omarion Hampton|R|5.6|15.5|;F|Chris Olave|W|21.7|18.4|;T|Isaiah Likely|T|3.3|12.5|;F|Jaylen Waddle|W|6.4|13.5|;R|Javonte Williams|R|18.3|15.5|;D|Rams D/ST|D|3|5.8|;B|Kenny Gainwell|R|3|7.7|;B|Woody Marks|R|9.1|8.9|;Q|Tyler Shough|Q|23.8|19.4|;B|Tank Bigsby|R|-0.5|3.4|R;B|Keaton Mitchell|R|13.7|5.1|;B|Juwan Johnson|T|23.3|9.3|
+Austin Mayland~133.38~R|Bijan Robinson|R|37.3|20.1|;F|Trey McBride|T|16.5|17|;F|CeeDee Lamb|W|22.2|17.9|;B|Zay Flowers|W|15.4|14.3|;W|Michael Pittman Jr.|W|3.6|11.5|R;B|TreVeyon Henderson|R|3.9|10.7|;T|Sam LaPorta|T|7.4|11.3|;D|Seahawks D/ST|D|2|7.5|;W|Brian Thomas Jr.|W|1.8|10.9|;R|Aaron Jones Sr.|R|14.2|14.2|;F|Romeo Doubs|W|7.9|11.8|R;B|Alvin Kamara|R|5.1|9.8|;B|Tyjae Spears|R|0.5|9.8|;Q|Jordan Love|Q|20.48|17.8|;B|Jared Goff|Q|19.36|17.2|
+Jordan Lande~134.88~R|Derrick Henry|R|21.9|18.7|;R|Kyren Williams|R|21.8|13.3|;W|Ja'Marr Chase|W|24.8|19.7|;B|Rome Odunze|W|7.4|10.1|;B|Colston Loveland|T|7.1|9.8|;F|Courtland Sutton|W|7.6|11.1|;Q|Joe Burrow|Q|22.58|17|;W|DK Metcalf|W|12.1|11.5|;F|Rhamondre Stevenson|R|6.8|12.2|;F|Jameson Williams|W|8.9|11.2|;B|Jacory Croskey-Merritt|R|5.3|9|R;B|Jakobi Meyers|W|19.4|9.4|;T|Mark Andrews|T|5.4|10.3|;D|Bengals D/ST|D|3|6.4|
+Dean Mizrahi~128.14~R|Chase Brown|R|8.9|17.1|;Q|Lamar Jackson|Q|20.44|21.8|O;W|Terry McLaurin|W|19.7|12.2|D;R|Travis Etienne Jr.|R|9|12.2|R;F|Josh Downs|W|12.7|12.3|;F|Jadarian Price|R|1.2|12.4|R;T|George Kittle|T|26.2|12.9|;B|Matthew Stafford|Q|22.9|16.4|;W|Matthew Golden|W|23|11.6|;F|Quentin Johnston|W|7|11.1|;B|Jordan Addison|W|20|10.7|Q;B|Oronde Gadsden|T|0|8.8|;B|Emanuel Wilson|R|1.4|9.1|;D|Eagles D/ST|D|0|7.9|
+#4
+Matt Ender~151.06~R|Jahmyr Gibbs|R|17.7|27.2|;F|James Cook III|R|16.3|18.2|;W|Nico Collins|W|32.8|15.7|;W|Luther Burden III|W|11.4|12.7|;B|Trevor Lawrence|Q|13.08|19.1|;R|Jaylen Warren|R|15.6|17.7|;T|Dalton Kincaid|T|1.7|10.9|;F|Dontayvion Wicks|W|4.8|11.5|;Q|Bryce Young|Q|23.46|20.9|;F|RJ Harvey|R|19.3|10.2|;B|Carnell Tate|W|23.5|12.3|;B|Jaylen Wright|R|0.7|7.6|;D|Packers D/ST|D|8|6.8|;B|Kalif Raymond|W|2.6|10.1|
+Bryan Rosen~89.3~R|Ashton Jeanty|R|18.6|19.4|;W|Jaxon Smith-Njigba|W|12.6|22.7|;F|Ladd McConkey|W|0|12|Q;W|DJ Moore|W|2.7|13.3|O;Q|Dak Prescott|Q|20.1|17.9|;R|D'Andre Swift|R|7.4|15.1|;F|Parker Washington|W|2|15.8|;T|Harold Fannin Jr.|T|11.7|11.3|;F|J.K. Dobbins|R|7.2|10.4|;B|Mike Washington Jr.|R|2.7|3.2|;B|Kyle Monangai|R|30|8.4|O;B|Denzel Boston|W|12.9|10.8|;D|Vikings D/ST|D|7|8.2|;B|Justice Hill|R|4.5|5.4|
+Jorge Fernandez~113.6~B|Jalen Hurts|Q|13.52|18.1|R;D|Texans D/ST|D|4|5.8|;W|Chris Godwin Jr.|W|9.1|7.1|;R|Bucky Irving|R|6.1|16.6|;T|Tyler Warren|T|9.1|13.2|O;F|Stefon Diggs|W|8.5|13.1|;W|Mike Evans|W|12.6|12.1|Q;R|Chuba Hubbard|R|27.9|17.1|;B|Blake Corum|R|3.1|8.3|;Q|Patrick Mahomes|Q|17|19.2|;F|Devaughn Vele|W|17.4|10.8|;B|Emmett Johnson|R|2|5.1|;F|Kendre Miller|R|1.9|9|
+Kenny Keller~149.96~Q|Drake Maye|Q|26.16|18.1|;T|Brock Bowers|T|20.6|16.3|;W|Davante Adams|W|7.2|16.2|O;R|Kenneth Walker III|R|32.9|21.3|;W|Rashee Rice|W|0|15.3|O;F|Tee Higgins|W|28.7|14.1|;R|Quinshon Judkins|R|21.6|12.9|O;F|David Montgomery|R|4.3|13.9|O;B|Marvin Harrison Jr.|W|8.2|6.4|;F|Travis Kelce|T|3.5|12|;D|Patriots D/ST|D|5|4.9|;B|Rashod Bateman|W|6.6|8.1|Q;B|Braelon Allen|R|8.7|13.1|
+Austin Mayland~213.58~F|Bijan Robinson|R|29.7|22.3|;T|Trey McBride|T|10.1|17.8|;W|CeeDee Lamb|W|43.3|17.5|;W|Zay Flowers|W|27.8|16.1|;B|Michael Pittman Jr.|W|3.5|9.9|R;R|TreVeyon Henderson|R|4.2|9.7|;F|Sam LaPorta|T|22.4|11.3|;D|Seahawks D/ST|D|12|7.7|;R|Aaron Jones Sr.|R|16.8|18.7|;B|Romeo Doubs|W|23.8|9.9|R;F|Alvin Kamara|R|22.8|10.7|;B|Jordan Love|Q|13.08|15.5|;Q|Jared Goff|Q|24.48|17.9|;B|Brian Robinson Jr.|R|25.7|6.2|
+Andrew Goldsmith~116.42~W|Amon-Ra St. Brown|W|15.5|20.9|;R|Jonathan Taylor|R|22.7|21.1|;Q|Josh Allen|Q|18.52|22.8|;B|Kyle Pitts Sr.|T|7.7|7.4|;F|Bhayshul Tuten|R|11.1|13.1|;W|Garrett Wilson|W|5.7|17.1|;R|Jeremiyah Love|R|6.5|16.1|O;B|Tony Pollard|R|13|12.2|;F|Michael Wilson|W|16.5|13.7|;T|Dalton Schultz|T|2.9|9.1|;F|Malik Washington|W|12|10.7|;B|Tyler Allgeier|R|12.9|8.1|;B|Ollie Gordon II|R|20|9.2|;D|Ravens D/ST|D|5|6.5|;B|Wan'Dale Robinson|W|11|9.3|
+Dean Mizrahi~148.08~R|Chase Brown|R|19.1|16.6|;F|Puka Nacua|W|29.7|18.8|;Q|Lamar Jackson|Q|18.88|21.8|O;W|Josh Downs|W|4.6|14|;T|George Kittle|T|17|14.1|;B|Matthew Stafford|Q|11.68|17.2|;W|Matthew Golden|W|11.7|13.3|;F|Quentin Johnston|W|5|8.7|;F|Jordan Addison|W|9.1|15.2|Q;B|Oronde Gadsden|T|8.8|7.1|;R|Emanuel Wilson|R|27|11.9|;D|Steelers D/ST|D|6|8|
+Jordan Schneider~148.82~R|Saquon Barkley|R|2|14.9|O;R|Christian McCaffrey|R|16|20.8|;F|Emeka Egbuka|W|3.3|11.5|;W|Tetairoa McMillan|W|47.2|16.4|;W|Drake London|W|14.6|17.4|;F|Cam Skattebo|R|7.6|16.7|;B|Kyler Murray|Q|11.48|19.7|;T|Tucker Kraft|T|16.5|9|;Q|Brock Purdy|Q|19.62|19.5|;F|Deebo Samuel Sr.|W|18|10.9|O;B|Kaelon Black|R|1.3|5.6|;D|Chiefs D/ST|D|4|6.5|;B|Justin Herbert|Q|9.56|12.9|;B|Kenyon Sadiq|T|0|10|
+Jordan Lande~141.02~R|Derrick Henry|R|15.9|21.3|;R|Kyren Williams|R|36.7|13.4|;W|Ja'Marr Chase|W|5.7|21.2|;B|Rome Odunze|W|15.4|10.1|;B|Colston Loveland|T|11.7|8.7|;F|Courtland Sutton|W|1.4|10.7|;Q|Joe Burrow|Q|27.72|18.8|;W|DK Metcalf|W|18.5|10.3|;B|Rhamondre Stevenson|R|18.4|11.8|;F|Jameson Williams|W|18.2|10.6|;B|Jacory Croskey-Merritt|R|7|11.5|R;F|Jakobi Meyers|W|6.3|10.9|;B|Bengals D/ST|D|4|5.9|;T|Darren Waller|T|6.6|10.2|;D|Bills D/ST|D|4|7.6|
+Edsall Hilty~154.94~W|George Pickens|W|9.5|14.1|;F|Christian Watson|W|7.7|14.9|;W|Malik Nabers|W|25.2|14|;R|Omarion Hampton|R|13.3|11.1|;F|Chris Olave|W|21.6|18.9|;B|Isaiah Likely|T|13.6|12|;F|Jaylen Waddle|W|14.5|12.2|;R|Javonte Williams|R|31.3|15|;D|Rams D/ST|D|4|6.7|;B|Kenny Gainwell|R|10.7|8.3|;B|Woody Marks|R|8.2|8.6|;Q|Tyler Shough|Q|15.94|19.1|;B|Tank Bigsby|R|5.5|2.9|R;B|Keaton Mitchell|R|11.3|4.9|;T|Juwan Johnson|T|11.9|10.7|
+#5
+Jorge Fernandez~159~W|Justin Jefferson|W|18.8|19.6|;Q|Jalen Hurts|Q|13|16.5|R;D|Texans D/ST|D|12|6.6|;B|Chris Godwin Jr.|W|7|6.9|;R|Bucky Irving|R|33.5|15.8|;T|Tyler Warren|T|21.4|12|O;W|Mike Evans|W|28.3|13.1|Q;R|Blake Corum|R|16.2|8.5|;F|Devaughn Vele|W|6.6|11|;F|Keon Coleman|W|7.7|8.9|;F|KC Concepcion|W|1.5|10.7|
+Matt Ender~153.54~R|Jahmyr Gibbs|R|39.7|28|;R|James Cook III|R|24.8|16.3|;W|Nico Collins|W|10.6|17|;W|Luther Burden III|W|8.9|12.6|;Q|Trevor Lawrence|Q|23.74|19.4|;F|Jaylen Warren|R|38.8|18.3|;T|Dalton Kincaid|T|3.7|8.9|;B|Dontayvion Wicks|W|11.3|10.3|;F|RJ Harvey|R|0.7|11.4|;F|Carnell Tate|W|1.6|14|;B|Jaylen Wright|R|1.1|7.8|;B|Will Shipley|R|8.3|10.4|R;D|Cowboys D/ST|D|1|8|
+Bryan Rosen~141.24~R|Ashton Jeanty|R|10.7|18.3|;W|Jaxon Smith-Njigba|W|24.8|21.3|;Q|Dak Prescott|Q|14.64|18.2|;R|D'Andre Swift|R|17.3|17.7|;W|Parker Washington|W|32.4|14.5|;T|Harold Fannin Jr.|T|1.4|12.2|;F|J.K. Dobbins|R|15.4|11|;B|Mike Washington Jr.|R|2|5|;B|Denzel Boston|W|13.6|12.2|;D|Vikings D/ST|D|10|7.2|;F|Khalil Shakir|W|11|10.1|;F|Tre' Harris|W|3.6|10|O
+Austin Mayland~133.74~F|Bijan Robinson|R|15.8|23.1|;T|Trey McBride|T|21.6|19.2|;W|CeeDee Lamb|W|2.9|19.8|;F|Zay Flowers|W|14.6|14.5|;B|Jayden Daniels|Q|34.26|21.1|;R|TreVeyon Henderson|R|4.8|10.9|;F|Sam LaPorta|T|19.8|13.3|;R|Aaron Jones Sr.|R|20.7|18.1|;W|Romeo Doubs|W|2.6|12.4|R;B|Alvin Kamara|R|2.6|11.4|;Q|Jared Goff|Q|28.94|20.3|;B|Keenan Allen|W|9.5|10.1|;B|Brian Robinson Jr.|R|1.6|8.3|;D|Jaguars D/ST|D|2|7.4|;B|Kendre Miller|R|9|8|
+Kenny Keller~139.66~Q|Drake Maye|Q|41.46|19.1|;T|Brock Bowers|T|25|16.8|;W|Davante Adams|W|22.1|16|O;F|Kenneth Walker III|R||0|;W|Tee Higgins|W|4.2|13.1|;R|Quinshon Judkins|R|8|15|O;R|David Montgomery|R|1.1|12.2|O;D|Patriots D/ST|D|6|6.3|;F|Rashod Bateman|W|11.2|5.7|Q;F|Braelon Allen|R|20.6|14.5|
+Dean Mizrahi~133.72~R|Chase Brown|R|7|17.9|;F|Puka Nacua|W|39.7|22.6|;B|Terry McLaurin|W|12.2|13.1|D;W|Josh Downs|W|7.7|12.4|;T|George Kittle|T|7.4|14|;Q|Matthew Stafford|Q|29.32|18.9|;W|Matthew Golden|W|22.3|13.2|;B|Dallas Goedert|T|9.8|11|;F|Oronde Gadsden|T|0|7.3|;R|Emanuel Wilson|R|13.2|14|;D|Steelers D/ST|D|1|7|;F|Antonio Williams|W|6.1|9.8|
+Andrew Goldsmith~105.78~W|Amon-Ra St. Brown|W|12.9|20.7|;R|Jonathan Taylor|R|11.2|19.7|;Q|Josh Allen|Q|32.5|20.4|;R|Bhayshul Tuten|R|11.6|14.4|;F|Garrett Wilson|W|25.4|15.1|;F|Jeremiyah Love|R|2.2|14.8|O;B|Tony Pollard|R|5.2|14.1|;W|Michael Wilson|W|7.28|17.4|;B|Malik Washington|W|12.1|11.3|;B|Tyler Allgeier|R|3.6|9.5|;B|Ollie Gordon II|R|14.8|11.2|;T|T.J. Hockenson|T|1.7|10.6|Q;B|Mike Gesicki|T|7.4|7.4|;D|Bears D/ST|D|1|6.7|;F|Roman Wilson|W|0|10.4|R
+Jordan Lande~147~R|Derrick Henry|R|23|17.5|;R|Kyren Williams|R|19.6|18.2|;W|Ja'Marr Chase|W|19.7|22.6|;B|Rome Odunze|W|5|11.2|;T|Colston Loveland|T|3.9|9.8|;B|Courtland Sutton|W|9.8|10.4|;Q|Joe Burrow|Q|24.6|20.8|;W|DK Metcalf|W|5.3|12.7|;F|Rhamondre Stevenson|R|17.5|13.5|;F|Jameson Williams|W|18.7|11.2|;B|Jacory Croskey-Merritt|R|14.2|9.2|R;F|Jakobi Meyers|W|5.7|10.8|;D|Bengals D/ST|D|9|7.2|;B|Bills D/ST|D|2|5.2|
+Jordan Schneider~115.26~R|Christian McCaffrey|R|17.3|19.1|;W|Emeka Egbuka|W|17.2|10|;W|Drake London|W|20.8|16.6|;R|Cam Skattebo|R|7.1|13.6|;T|Tucker Kraft|T|11.6|10.7|;Q|Brock Purdy|Q|16.16|18.6|;F|Deebo Samuel Sr.|W|2.5|11.2|O;B|Kaelon Black|R|1.6|5.2|;B|Justin Herbert|Q|10.24|14.4|;F|Kenyon Sadiq|T|0.3|9.6|;D|Falcons D/ST|D|11|6.7|;F|Wan'Dale Robinson|W|11.3|9.1|
+Edsall Hilty~162.14~W|George Pickens|W|30|13.6|;F|Christian Watson|W|34.3|14.2|;W|Malik Nabers|W|31.1|13.9|;R|Omarion Hampton|R|4.9|12.4|;F|Chris Olave|W|8.6|17.2|;T|Isaiah Likely|T|32.4|13.2|;F|Jaylen Waddle|W|4.8|11.6|;R|Javonte Williams|R|14.2|18|;D|Rams D/ST|D|2|5.7|;B|Kenny Gainwell|R|5.8|7.3|;B|Woody Marks|R|12.5|7.7|;Q|Tyler Shough|Q|-0.16|17|;B|Keaton Mitchell|R|5.9|8.4|;B|Juwan Johnson|T|5.6|10.2|;B|Seth McGowan|R|2.9|3.4|`;
+var WK = {};
+(function(){
+ var SLOT={Q:'QB',R:'RB',W:'WR',T:'TE',F:'FLEX',D:'DST',B:'BE',I:'IR',K:'K'}, POS={Q:'QB',R:'RB',W:'WR',T:'TE',D:'DST',K:'K'}, INJ={O:'OUT',D:'DOUBTFUL',Q:'QUESTIONABLE',R:'INJURY_RESERVE',Y:'DAY_TO_DAY'};
+ var cur=0, pend=null;
+ RAW.split('\n').forEach(function(ln){ ln=ln.trim(); if(!ln) return;
+  if(ln.charAt(0)==='#'){ cur=Number(ln.slice(1)); WK[cur]=[]; pend=null; return; }
+  var f=ln.split('~'), pl=f[2].split(';').map(function(s){ var a=s.split('|'); return [SLOT[a[0]]||a[0],a[1],POS[a[2]]||a[2],a[3]===''?null:Number(a[3]),a[4]===''?null:Number(a[4]),INJ[a[5]]||'']; });
+  var t=[f[0],Number(f[1]),pl];
+  if(!pend){ pend=[t]; } else { pend.push(t); WK[cur].push(pend); pend=null; }
+ });
+ WK[6]=W6;
+})();
+function starters(t){ return t[2].filter(function(p){return p[0]!=='BE'&&p[0]!=='IR';}); }
+function autoStory(w,mi,win,lose,margin){
+  var W=win[0], L=lose[0], v=(w*5+mi)%3, sw=starters(win), sl=starters(lose);
+  var played=sw.filter(function(p){return p[3]!==null;});
+  var best=played.slice().sort(function(a,b){return (b[3]-b[4])-(a[3]-a[4]);})[0];
+  var bust=sl.filter(function(p){return p[3]!==null&&p[4]>=8;}).sort(function(a,b){return (a[3]-a[4])-(b[3]-b[4]);})[0];
+  var zeros=sl.filter(function(p){return p[3]===null||(p[3]<=0.5&&p[4]>=5);});
+  var ow=optimal(win[2])-win[1], ol=optimal(lose[2])-lose[1];
+  var h = margin<4 ? [W+' survives '+L+' by '+f1(margin), W+' sneaks past '+L, L+' loses a heartbreaker to '+W][v]
+        : margin>=40 ? [W+' flattens '+L, L+' gets steamrolled by '+W, W+' runs up the score on '+L][v]
+        : [W+' handles '+L, W+' takes care of '+L, L+' comes up short against '+W][v];
+  var s=[];
+  if (best) s.push([best[1]+' led the way with '+f1(best[3])+' against '+f1(best[4])+' projected, and '+W+' deserves credit for the start.', 'Hats off to '+W+': '+best[1]+' posted '+f1(best[3])+' on '+f1(best[4])+' projected.', best[1]+' ('+f1(best[3])+' vs '+f1(best[4])+') did the heavy lifting, and '+W+' looked smart for starting him.'][v]);
+  if (bust) s.push([L+' got '+f1(bust[3])+' from '+bust[1]+' on '+f1(bust[4])+' projected, which is a creative use of a roster spot.', bust[1]+' gave '+L+' '+f1(bust[3])+' against '+f1(bust[4])+', a real gut punch.', L+' needed '+bust[1]+' and received '+f1(bust[3])+' on '+f1(bust[4])+' projected.'][v]);
+  if (ol>margin) s.push(L+' left '+f1(ol)+' points on the bench and would have won with a smarter lineup.');
+  else if (zeros.length) s.push(L+' started '+zeros.length+' player'+(zeros.length>1?'s':'')+' who scored nothing ('+zeros.slice(0,2).map(function(p){return p[1];}).join(', ')+'). Bold.');
+  else if (ow>=12) s.push(W+' also left '+f1(ow)+' on the bench and still won, which is a flex.');
+  if (margin<4) s.push('Decided by '+f1(margin)+', so every single point counted.');
+  else if (margin>=40) s.push('A '+f1(margin)+'-point margin is less a game and more a statement.');
+  return {h:h,t:s.join(' ')};
+}
+function vComm(){
+  var w=asof; if(!w||!WK[w]) return '<div class="panel"><div class="note">No intel for this week yet.</div></div>';
+  var names=state.teams.map(function(t){return t.name;});
+  var P=[]; WK[w].forEach(function(m){ m.forEach(function(t){ t[2].forEach(function(p){ P.push({team:t[0],slot:p[0],name:p[1],act:p[3],proj:p[4],inj:p[5]}); }); }); });
+  var S=P.filter(function(p){return p.act!==null&&p.proj>0&&p.slot!=='BE'&&p.slot!=='IR';});
+  var over=S.slice().sort(function(a,b){return (b.act-b.proj)-(a.act-a.proj);}).slice(0,5), bust=S.slice().sort(function(a,b){return (a.act-a.proj)-(b.act-b.proj);}).slice(0,5);
+  function plist(a){ return '<table><tbody>'+a.map(function(p){ var d=p.act-p.proj; return '<tr><td>'+esc(p.name)+'<span class="sub">'+esc(p.team)+'</span></td><td class="n mono">'+f1(p.act)+' <span class="sub">vs '+f1(p.proj)+'</span></td><td class="n mono '+(d>0?'pos':'neg')+'">'+sgn(d)+'</td></tr>'; }).join('')+'</tbody></table>'; }
+  var h='<div class="panel"><div class="ph"><h2>Week '+w+' intel</h2><span class="sub">ESPN box scores'+(w===6?' and the league transaction log':'')+'. Injury tags show status as of Oct 20.</span></div><div class="mu">';
+  WK[w].forEach(function(m,mi){
+    var a=m[0], b=m[1], win=a[1]>b[1]?a:b, lose=win===a?b:a, margin=win[1]-lose[1];
+    var ow=optimal(win[2]), ol=optimal(lose[2]), flip=(ol-lose[1])>margin;
+    var left='Bench points left behind: '+esc(win[0])+' '+f1(ow-win[1])+', '+esc(lose[0])+' '+f1(ol-lose[1])+(flip?'. '+esc(lose[0])+' would have won with a better lineup.':'.');
+    var st=(w===6)?STORY6[mi]:autoStory(w,mi,win,lose,margin);
+    h+='<div class="card" style="grid-column:1/-1"><div class="side win"><span class="mk">W</span><span class="tn">'+esc(win[0])+'</span><span class="sub">#'+rowOf(w,names.indexOf(win[0])).power+'</span><span class="sc">'+f2(win[1])+'</span></div><div class="side lose"><span class="mk"></span><span class="tn">'+esc(lose[0])+'</span><span class="sub">#'+rowOf(w,names.indexOf(lose[0])).power+'</span><span class="sc">'+f2(lose[1])+'</span></div>'
+     +'<div style="padding:10px 14px 4px;font-family:var(--f-display);font-weight:700;font-size:20px">'+esc(st.h)+'</div><p class="p" style="padding:0 14px 8px;color:var(--fg)">'+esc(st.t)+'</p><div class="ft">Margin '+f2(margin)+' · '+left+'</div></div>';
+  });
+  h+='</div></div>';
+  h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Biggest overperformers</h2></div>'+plist(over)+'<div class="ph"><h2>Biggest busts</h2></div>'+plist(bust)+'<div class="note">Starters only, measured against ESPN\'s projection. Players who did not play are excluded.</div></div>';
+  if (w===6){
+    var rows=TX6.map(function(x){
+      var f=null; P.forEach(function(p){ if(p.team===x[1]&&p.name===x[2]) f=p; });
+      var res=f?(f.slot==='BE'||f.slot==='IR'?'<span class="neg">Benched</span> '+f1(f.act||0)+' pts':'<span class="pos">Started</span> '+f1(f.act||0)+' pts <span class="sub">vs '+f1(f.proj||0)+'</span>'):'<span class="sub">Not on roster</span>';
+      return '<tr><td class="mono">'+x[0]+'</td><td>'+esc(x[1])+'</td><td>'+esc(x[2])+'</td><td>'+esc(x[3]||'–')+'</td><td class="n mono">$'+x[4]+'</td><td>'+res+'</td></tr>';
+    }).join('');
+    h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Waiver wire scorecard</h2></div><div class="scroll"><table><thead><tr><th>Date</th><th>Team</th><th>Added</th><th>Dropped</th><th class="n">FAAB</th><th>Week 6</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="note">Moves processed Oct 14 to Oct 18. The box score has no in-game injury timing, so a low score is shown against projection without a cause.</div></div>';
+  } else {
+    h+='<div class="panel" style="margin-top:18px"><div class="note">The waiver wire scorecard is only built for week 6 so far.</div></div>';
+  }
+  return h;
+}
+function vMethod(){
+  var W=state.w;
+  function S(k,l,min,max,step){ return '<div class="slider"><label for="s_'+k+'">'+l+'</label><input id="s_'+k+'" type="range" min="'+min+'" max="'+max+'" step="'+step+'" value="'+W[k]+'" data-w="'+k+'"><span class="mono" id="v_'+k+'">'+W[k]+'</span></div>'; }
+  return '<div class="panel"><div class="ph"><h2>How the rating works</h2><button class="btn" id="wReset">Reset weights</button></div>'
+   +'<div class="mth"><div><p class="p" style="padding:0 0 10px">Each team is scored against the other nine on four measures. Every measure is converted to a z-score, so a 10-point scoring edge counts for more than a 1-point edge. The weighted average is rescaled so 50 is the league average and 15 points is one standard deviation.</p>'
+   +'<div class="formula">Rating = 50 + 15 \u00d7 \u03a3(weight \u00d7 z) \u00f7 \u03a3 weight<br>All-play win %: share of every other team\'s score you beat each week<br>Season PPG: average points per game<br>Recent PPG: average of the last N weeks<br>Record: win % in actual matchups<br>Ties in rating break on season PPG</div></div>'
+   +'<div><p class="p" style="padding:0 0 6px">Adjust the weights to see how the order moves. Changes apply immediately and stay in this browser.</p>'
+   +S('ap','All-play win %',0,5,0.5)+S('ppg','Season PPG',0,5,0.5)+S('form','Recent PPG',0,5,0.5)+S('rec','Record',0,5,0.5)+S('win','Recent window (weeks)',2,5,1)+'</div></div>'
+   +'<div class="note">The Old # column on the rankings tab shows the original formula: ordinal ranks for record (up to 3x), all-play wins, consistency (from week 3) and PPG, without roster strength.</div></div>';
+}
+function vData(){
+  var T=state.teams, h='<div class="panel dt"><div class="tools"><button class="btn pri" id="addBtn">Add team</button><button class="btn" id="exportBtn">Show data as text</button><button class="btn" id="resetBtn">Reset to published data</button><span class="sub">Edits save in this browser only. Send updates to Claude to publish them for everyone.</span></div>'
+   +'<div class="p" style="padding-bottom:8px">Enter points and pick the opponent each week. Results, records and points against are worked out from the scores. Choosing an opponent sets the matching opponent for the other team too.</div><div class="scroll"><table><thead><tr><th>Team</th>';
+  for (var k=0;k<WEEKS;k++) h+='<th class="n">W'+(k+1)+'</th>'; h+='<th></th></tr></thead><tbody>';
+  T.forEach(function(t,i){
+    h+='<tr><td><input type="text" class="nm" data-k="name" data-i="'+i+'" value="'+esc(t.name)+'" aria-label="Team name"></td>';
+    for (var q=0;q<WEEKS;q++){
+      h+='<td><input type="number" step="0.01" data-k="sc" data-i="'+i+'" data-w="'+q+'" value="'+(num(t.scores[q])===null?'':t.scores[q])+'" aria-label="Week '+(q+1)+' points"><select data-k="opp" data-i="'+i+'" data-w="'+q+'" aria-label="Week '+(q+1)+' opponent"><option value="">\u2013</option>'
+        +T.map(function(o){ return o.id===t.id?'':'<option value="'+o.id+'"'+(t.opp[q]===o.id?' selected':'')+'>'+esc(short(o.name))+'</option>'; }).join('')+'</select></td>';
+    }
+    h+='<td><button class="btn" data-del="'+i+'">Remove</button></td></tr>';
+  });
+  return h+'</tbody></table></div><textarea id="exportBox" hidden readonly></textarea></div>';
+}
+
+/* ---------- shell ---------- */
+function render(keepData){
+  var _y=window.scrollY;
+  cache={}; var last=lastWeek(); if(!asof||asof>last) asof=last;
+  renderChips(); renderPodium(asof);
+  document.getElementById('tabs').innerHTML=TABS.map(function(t){ return '<button role="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+'</button>'; }).join('');
+  var v=document.getElementById('view');
+  if (tab==='data'){ if(!keepData) v.innerHTML=vData(); return; }
+  v.innerHTML = tab==='rank'?vRank(asof):tab==='match'?vMatch(asof):tab==='trend'?vTrend(asof):tab==='outlook'?vOutlook(asof):tab==='comm'?vComm():tab==='scores'?vScores(asof):vMethod();
+  window.scrollTo(0,_y);
+}
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-wk]'); if(el){ asof=Number(el.getAttribute('data-wk')); render(false); return; }
+  el=e.target.closest('[data-tab]'); if(el){ tab=el.getAttribute('data-tab'); render(false); return; }
+  el=e.target.closest('[data-tm]'); if(el){ trendMode=el.getAttribute('data-tm'); render(false); return; }
+  el=e.target.closest('[data-t]'); if(el){ var i=Number(el.getAttribute('data-t')); hl=hl===i?null:i; render(false); return; }
+  if(e.target.id==='wReset'){ state.w=JSON.parse(JSON.stringify(DEF_W)); save(); render(false); return; }
+});
+document.addEventListener('input',function(e){
+  var el=e.target, k=el.getAttribute('data-w'); if(!k||el.type!=='range') return;
+  state.w[k]=Number(el.value); document.getElementById('v_'+k).textContent=el.value; save(); cache={};
+});
+document.addEventListener('change',function(e){ if(e.target.type==='range' && tab==='outlook') render(false); });
+render(false);
+</script>
+</body>
+</html>
