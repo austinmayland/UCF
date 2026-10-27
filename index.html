@@ -96,7 +96,7 @@ html{scrollbar-gutter:stable;overflow-y:scroll}
 .side.win .sc{font-weight:600}
 .side .mk{width:18px;font-family:var(--f-display);font-weight:700;color:var(--up)}
 .card .ft{font-size:11px;color:var(--muted);padding:5px 12px;border-top:1px solid var(--line);font-family:var(--f-data)}
-.sbg{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px;padding:12px 16px 16px}
+.sbg{display:grid;grid-template-columns:1fr;gap:8px;padding:12px 16px 16px}
 .sbc{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
 .sbs{display:flex;align-items:center;gap:8px;min-width:0}.sbs.r{justify-content:flex-end;text-align:right}
 .sbs .av{width:30px;height:30px;font-size:13px}
@@ -378,10 +378,11 @@ function vSched(){
   var w=lastWeek(); if(!w) return '<div class="panel"><div class="note">No scores yet.</div></div>';
   var N=state.teams.length, m=schedModel(w), weeks=Object.keys(SCHED).map(Number).filter(function(k){return k>w&&k<=state.w.reg;}).sort(function(a,b){return a-b;});
   if(!weeks.length) return '<div class="panel"><div class="note">No remaining regular-season games.</div></div>';
-  var nx=weeks[0], h='<div class="panel"><div class="ph"><h2>Week '+nx+' matchups</h2><span class="sub">Win chance from current ratings and scoring spread</span></div><div class="mu">';
-  SCHED[nx].forEach(function(pq){
-    var a=pq[0], b=pq[1], pa=winProb(m,a,b), pr=[[a,pa],[b,1-pa]];
-    h+='<div class="card">'+pr.map(function(x){ var i=x[0], p=x[1]; return '<div class="side '+(p>=0.5?'win':'lose')+'"><span class="mk"></span>'+av(i)+'<span class="tn">'+esc(state.teams[i].name)+'</span><span class="sub">#'+m[i].r.power+'</span><span class="sc">'+Math.round(p*100)+'%</span></div>'; }).join('')+'<div class="ft">Projected score '+f1(m[a].mu)+' to '+f1(m[b].mu)+'</div></div>';
+  var nx=weeks[0], h='<div class="panel"><div class="ph"><h2>Week '+nx+' matchups</h2><span class="sub">Win chance from current ratings and scoring spread. Most confident picks first, favorite on the left; the middle shows projected scores.</span></div><div class="sbg">';
+  SCHED[nx].map(function(pq){ var a=pq[0], b=pq[1], pa=winProb(m,a,b); return pa>=0.5?[a,b,pa]:[b,a,1-pa]; }).sort(function(x,y){ return Math.abs(y[2]-0.5)-Math.abs(x[2]-0.5); }).forEach(function(q){
+    var a=q[0], b=q[1], pa=q[2];
+    function side(i,p,right){ var st='<div class="sbt"><span class="tn">'+esc(state.teams[i].name)+'</span><span class="sc">'+Math.round(p*100)+'%</span></div>'; return '<div class="sbs'+(right?' r':'')+(p>=0.5?' w':' l')+'">'+(right?st+av(i):av(i)+st)+'</div>'; }
+    h+='<div class="sbc">'+side(a,pa,false)+'<div class="sbm">'+f1(m[a].mu)+' to '+f1(m[b].mu)+'</div>'+side(b,1-pa,true)+'</div>';
   });
   h+='</div></div>';
   var info=state.teams.map(function(t,i){
