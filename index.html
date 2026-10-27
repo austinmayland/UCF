@@ -135,23 +135,24 @@ var DEF_W = {ap:3, ppg:2.5, form:1.5, rec:1.5, win:3, spots:6, reg:14};
 /* ---------- 2026 data: [points, opponent index] per week ---------- */
 var NAMES = ['Kenny Keller','Austin Mayland','Edsall Hilty','Bryan Rosen','Matt Ender','Jordan Schneider','Jordan Lande','Jorge Fernandez','Andrew Goldsmith','Dean Mizrahi'];
 var PTS = [ /* weeks 1-6, in NAMES order */
- [124.72,161.42,144.76,149.96,139.66,104.7],
- [164.46,151.14,133.38,213.58,133.74,134.6],
- [160.36,121.12,127.5,154.94,162.14,145.84],
- [200.1,149.26,156.4,89.3,141.24,110.32],
- [159.5,114.76,143.54,151.06,153.54,145.14],
- [96.64,135.08,146.28,148.82,115.26,150.06],
- [105.96,106.08,134.88,141.02,147.0,111.84],
- [150.62,118.16,90.12,113.6,159.0,110.48],
- [148.26,186.22,153.16,116.42,105.78,100.6],
- [146.06,71.1,128.14,148.08,133.72,112.88]];
+ [124.72,161.42,144.76,149.96,139.66,104.7,164.14],
+ [164.46,151.14,133.38,213.58,133.74,134.6,140.72],
+ [160.36,121.12,127.5,154.94,162.14,145.84,125.62],
+ [200.1,149.26,156.4,89.3,141.24,110.32,172.68],
+ [159.5,114.76,143.54,151.06,153.54,145.14,115.72],
+ [96.64,135.08,146.28,148.82,115.26,150.06,131.12],
+ [105.96,106.08,134.88,141.02,147.0,111.84,125.06],
+ [150.62,118.16,90.12,113.6,159.0,110.48,127.52],
+ [148.26,186.22,153.16,116.42,105.78,100.6,119.5],
+ [146.06,71.1,128.14,148.08,133.72,112.88,122.4]];
 var PAIRS = [ /* matchups by name index per week */
  [[7,1],[4,5],[8,2],[0,6],[3,9]],
  [[9,1],[8,4],[5,0],[2,3],[6,7]],
  [[1,2],[4,0],[3,8],[7,5],[9,6]],
  [[8,1],[3,4],[0,7],[5,9],[2,6]],
  [[1,3],[4,7],[9,0],[6,8],[2,5]],
- [[1,4],[7,9],[3,6],[0,2],[8,5]]];
+ [[1,4],[7,9],[3,6],[0,2],[8,5]],
+ [[9,4],[1,6],[7,2],[3,5],[0,8]]];
 function realData(){
   var teams = NAMES.map(function(n,i){
     var sc=[],op=[]; for (var w=0;w<WEEKS;w++){ sc.push(PTS[i][w]===undefined?null:PTS[i][w]); op.push(null); }
@@ -416,6 +417,29 @@ var STORY6 = [
  {h:"Schneider throws the week's loudest punch",
   t:"Christian McCaffrey posted 30.7, the best score anyone had all week, and Schneider won by 49.5, so enjoy the trophy-case energy. DeVonta Smith (20.5), Emeka Egbuka (17.8) and waiver find Dameon Pierce (15.0) all beat projection. Andrew Goldsmith got a huge 24.7 from Bhayshul Tuten and very little else. Josh Allen was 7.6 under projection, and his waiver adds produced 2.3 (Cooks), 4.2 (Higbee), 5.8 (Allgeier) and 1.0 (Giants D/ST), with Ja'Kobi Lane's 8.0 sitting on the bench. Busy hands, quiet results."}
 ];
+var TX7 = [
+ ["Oct 21","Andrew Goldsmith","Kirk Cousins","",0],["Oct 21","Andrew Goldsmith","Broncos D/ST","Giants D/ST",0],["Oct 21","Bryan Rosen","Cowboys D/ST","Colts D/ST",0],["Oct 21","Matt Ender","Deebo Samuel Sr.","Seahawks D/ST",0],["Oct 21","Jordan Schneider","Kyler Murray","Justin Herbert",0],["Oct 21","Andrew Goldsmith","Christian Kirk","Tyler Allgeier",1],["Oct 21","Dean Mizrahi","Titans D/ST","Terry McLaurin",3],["Oct 21","Edsall Hilty","Tyler Shough","Keaton Mitchell",6],["Oct 21","Austin Mayland","Kyle Pitts Sr.","James Conner",8],["Oct 21","Jordan Lande","DeMario Douglas","Courtland Sutton",9],
+ ["Oct 22","Jordan Schneider","Bengals D/ST","Ravens D/ST",0],["Oct 22","Jorge Fernandez","T.J. Hockenson","Chris Godwin Jr.",0],["Oct 22","Dean Mizrahi","Courtland Sutton","Oronde Gadsden",4],["Oct 22","Dean Mizrahi","Tyler Allgeier","Titans D/ST",5],
+ ["Oct 24","Jordan Schneider","Makai Lemon","Wan'Dale Robinson",0],["Oct 24","Jordan Schneider","Chris Godwin Jr.","Bengals D/ST",1],["Oct 24","Dean Mizrahi","Colby Parkinson","MarShawn Lloyd",1],["Oct 24","Bryan Rosen","Konata Mumpfield","Mike Washington Jr.",2],
+ ["Oct 25","Jorge Fernandez","Bam Knight","",0]
+];
+var TR7 = [
+ ["Oct 22","Bryan Rosen",["Breece Hall","Hunter Henry"],"Matt Ender",["Colston Loveland"]],
+ ["Oct 23","Edsall Hilty",["Chris Olave"],"Matt Ender",["Jaylen Warren"]]
+];
+var STORY7 = [
+ {h:"Mizrahi edges Ender, who benched the quarterback who would have won it",
+  t:"Ender started Bryce Young (5.4) and left Caleb Williams (24.1) on the bench, an 18.7-point swing in a game he lost by 6.7. Luther Burden III (25.7 on a 13.0 projection) and trade pickup Hunter Henry (14.1) kept it close, and Jahmyr Gibbs still delivered 19.3. Nico Collins posted 2.6 on a 17.2 projection, which is a lot to ask anyone to forgive. Dean Mizrahi got 20.5 from Emanuel Wilson and 21.8 from Puka Nacua, and a steady 17.5 from Matthew Stafford. Well played, and a little lucky."},
+ {h:"Mayland rides McBride and Flowers past Lande",
+  t:"Trey McBride (29.1) and Zay Flowers (29.7) gave Austin 58.8 points on 32.0 of projection, and he won by 15.7 even with Aaron Jones (3.6) and Sam LaPorta (2.8) stinking up the lineup. Kyle Pitts, the $8 waiver claim, scored 13.2 on the bench while LaPorta started. Jordan Lande had his own drama. Derrick Henry gave 5.9 on a 19.0 projection, and Joe Burrow scored 28.9 on the bench while Jordan Love started for 17.0. Jameson Williams (26.1) and Rhamondre Stevenson (22.5) were great, and the $9 DeMario Douglas claim scored 5.3 on the bench."},
+ {h:"Fernandez holds off Hilty by 1.9 in the week's closest game",
+  t:"Bucky Irving (26.0), Tre Tucker (23.3) and Blake Corum (17.1) carried Jorge, and T.J. Hockenson, picked up for free on Thursday, gave 13.5 at tight end. Justin Jefferson (8.4 on a 19.1 projection) and A.J. Brown (7.8) did their best to lose it. Edsall Hilty has a real argument that he won the trade: Jaylen Warren scored 18.7 where Chris Olave gave Ender 11.6. Javonte Williams (23.5) and Malik Nabers (20.1) were excellent, but Isaiah Likely's 3.2 on a 14.6 projection was an 11.4-point shortfall, bigger than the margin."},
+ {h:"Rosen posts the week's highest score",
+  t:"Bryan Rosen scored 172.7, the most in the league, and won by 41.6. Jaxon Smith-Njigba (33.3), Omar Cooper Jr. (24.5 on an 8.1 projection) and trade acquisition Colston Loveland (19.9) did the damage, so the Breece Hall and Hunter Henry package paid off at least in one direction. Jordan Schneider got 21.1 from Cam Skattebo and still lost, with Makai Lemon (19.7) and Kyler Murray (13.9) both on the bench. Brock Purdy scored 12.0 on a 21.1 projection, which does not help the cause."},
+ {h:"Keller finally gets his money's worth from Jacobs",
+  t:"The $112 Josh Jacobs claim started at running back and scored 20.1, so Kenny can stop explaining it. Tee Higgins (28.8), Drake Maye (29.4) and Quinshon Judkins (23.4) built a 164.1-point lineup, and Kenneth Walker's 9.7 on a 19.7 projection barely mattered. Andrew Goldsmith left Tony Pollard's 38.5 on the bench, the biggest single score anyone stranded this week, and lost by 44.6 mostly because Garrett Wilson (4.6) and Tyler Higbee (3.4) gave him nothing. Kirk Cousins (20.4) was a good claim."}
+];
+var TXW={6:TX6,7:TX7}, TRW={7:TR7}, STORYW={6:STORY6,7:STORY7};
 function optimal(players){
   var ok=players.filter(function(x){return x[0]!=='IR'&&x[3]!==null;}).slice().sort(function(a,b){return b[3]-a[3];});
   var used=[], total=0;
@@ -478,7 +502,18 @@ Dean Mizrahi~133.72~R|Chase Brown|R|7|17.9|;F|Puka Nacua|W|39.7|22.6|;B|Terry Mc
 Andrew Goldsmith~105.78~W|Amon-Ra St. Brown|W|12.9|20.7|;R|Jonathan Taylor|R|11.2|19.7|;Q|Josh Allen|Q|32.5|20.4|;R|Bhayshul Tuten|R|11.6|14.4|;F|Garrett Wilson|W|25.4|15.1|;F|Jeremiyah Love|R|2.2|14.8|O;B|Tony Pollard|R|5.2|14.1|;W|Michael Wilson|W|7.28|17.4|;B|Malik Washington|W|12.1|11.3|;B|Tyler Allgeier|R|3.6|9.5|;B|Ollie Gordon II|R|14.8|11.2|;T|T.J. Hockenson|T|1.7|10.6|Q;B|Mike Gesicki|T|7.4|7.4|;D|Bears D/ST|D|1|6.7|;F|Roman Wilson|W|0|10.4|R
 Jordan Lande~147~R|Derrick Henry|R|23|17.5|;R|Kyren Williams|R|19.6|18.2|;W|Ja'Marr Chase|W|19.7|22.6|;B|Rome Odunze|W|5|11.2|;T|Colston Loveland|T|3.9|9.8|;B|Courtland Sutton|W|9.8|10.4|;Q|Joe Burrow|Q|24.6|20.8|;W|DK Metcalf|W|5.3|12.7|;F|Rhamondre Stevenson|R|17.5|13.5|;F|Jameson Williams|W|18.7|11.2|;B|Jacory Croskey-Merritt|R|14.2|9.2|R;F|Jakobi Meyers|W|5.7|10.8|;D|Bengals D/ST|D|9|7.2|;B|Bills D/ST|D|2|5.2|
 Jordan Schneider~115.26~R|Christian McCaffrey|R|17.3|19.1|;W|Emeka Egbuka|W|17.2|10|;W|Drake London|W|20.8|16.6|;R|Cam Skattebo|R|7.1|13.6|;T|Tucker Kraft|T|11.6|10.7|;Q|Brock Purdy|Q|16.16|18.6|;F|Deebo Samuel Sr.|W|2.5|11.2|O;B|Kaelon Black|R|1.6|5.2|;B|Justin Herbert|Q|10.24|14.4|;F|Kenyon Sadiq|T|0.3|9.6|;D|Falcons D/ST|D|11|6.7|;F|Wan'Dale Robinson|W|11.3|9.1|
-Edsall Hilty~162.14~W|George Pickens|W|30|13.6|;F|Christian Watson|W|34.3|14.2|;W|Malik Nabers|W|31.1|13.9|;R|Omarion Hampton|R|4.9|12.4|;F|Chris Olave|W|8.6|17.2|;T|Isaiah Likely|T|32.4|13.2|;F|Jaylen Waddle|W|4.8|11.6|;R|Javonte Williams|R|14.2|18|;D|Rams D/ST|D|2|5.7|;B|Kenny Gainwell|R|5.8|7.3|;B|Woody Marks|R|12.5|7.7|;Q|Tyler Shough|Q|-0.16|17|;B|Keaton Mitchell|R|5.9|8.4|;B|Juwan Johnson|T|5.6|10.2|;B|Seth McGowan|R|2.9|3.4|`;
+Edsall Hilty~162.14~W|George Pickens|W|30|13.6|;F|Christian Watson|W|34.3|14.2|;W|Malik Nabers|W|31.1|13.9|;R|Omarion Hampton|R|4.9|12.4|;F|Chris Olave|W|8.6|17.2|;T|Isaiah Likely|T|32.4|13.2|;F|Jaylen Waddle|W|4.8|11.6|;R|Javonte Williams|R|14.2|18|;D|Rams D/ST|D|2|5.7|;B|Kenny Gainwell|R|5.8|7.3|;B|Woody Marks|R|12.5|7.7|;Q|Tyler Shough|Q|-0.16|17|;B|Keaton Mitchell|R|5.9|8.4|;B|Juwan Johnson|T|5.6|10.2|;B|Seth McGowan|R|2.9|3.4|
+#7
+Dean Mizrahi~122.4~R|Chase Brown|R|9.8|15|;F|Puka Nacua|W|21.8|23.4|;W|Josh Downs|W|3.8|8.5|;T|George Kittle|T|14.8|17.1|;Q|Matthew Stafford|Q|17.5|19.5|;W|Matthew Golden|W|9.9|17.5|Q;F|Dallas Goedert|T|9.8|11.5|;B|Jordan Addison|W|4.3|11.1|;R|Emanuel Wilson|R|20.5|11|;D|Steelers D/ST|D|7|7|;B|Tyler Allgeier|R|7.9|11.4|;F|Courtland Sutton|W|7.5|9|;B|Colby Parkinson|T|9.8|8.2|
+Matt Ender~115.72~R|Jahmyr Gibbs|R|19.3|26.9|;W|Nico Collins|W|2.6|17.2|;W|Luther Burden III|W|25.7|13|;Q|Bryce Young|Q|5.42|18.3|;R|RJ Harvey|R|14|11.5|;B|Caleb Williams|Q|24.12|18.2|;F|Carnell Tate|W|9.9|11.4|;F|Xavier Worthy|W|4.1|12.7|;D|Vikings D/ST|D|9|8.2|;T|Hunter Henry|T|14.1|8.2|;F|Chris Olave|W|11.6|16.3|
+Austin Mayland~140.72~R|Bijan Robinson|R|17.2|21.9|;T|Trey McBride|T|29.1|16.2|;W|CeeDee Lamb|W|24.4|19.2|;W|Zay Flowers|W|29.7|15.8|;B|TreVeyon Henderson|R|4.3|7.3|;F|Sam LaPorta|T|2.8|12.8|;R|Aaron Jones Sr.|R|3.6|12.5|Q;B|Alvin Kamara|R|13.2|8.2|;Q|Jared Goff|Q|20.02|19.2|;F|Keenan Allen|W|6.1|9.1|;F|Kendre Miller|R|5.8|9.6|;D|Chiefs D/ST|D|2|7.3|;B|Kyle Pitts Sr.|T|13.2|9.9|
+Jordan Lande~125.06~R|Derrick Henry|R|5.9|19|;R|Kyren Williams|R|18.1|20.1|;F|Ja'Marr Chase|W|17.2|22.6|;B|Rome Odunze|W|10.9|10.5|;B|Joe Burrow|Q|28.88|20.1|;W|DK Metcalf|W|7.6|15.3|;F|Rhamondre Stevenson|R|22.5|11.7|;F|Jameson Williams|W|26.1|11|;B|Rico Dowdle|R|14.6|7.9|;W|Germie Bernard|W|5.7|13.7|;T|Pat Freiermuth|T|4|10.1|;Q|Jordan Love|Q|16.96|20.6|;D|Jets D/ST|D|1|7.5|;B|DeMario Douglas|W|5.3|10.7|
+Jorge Fernandez~127.52~W|A.J. Brown|W|7.8|16.5|;W|Justin Jefferson|W|8.4|19.1|;D|Texans D/ST|D|3|7.9|;R|Bucky Irving|R|26|14.6|;R|Chuba Hubbard|R|10|15.4|;F|Blake Corum|R|17.1|10.2|;F|Jalen Coker|W|1.9|15.9|Q;B|Patrick Mahomes|Q|6|16.1|;B|Devaughn Vele|W|16.4|10.4|;F|Tre Tucker|W|23.3|10.6|;Q|C.J. Stroud|Q|16.52|20.1|;T|T.J. Hockenson|T|13.5|10.7|;B|Bam Knight|R|9.3|8.3|
+Edsall Hilty~125.62~W|George Pickens|W|15.7|13.6|;F|Christian Watson|W|10.7|17.3|;W|Malik Nabers|W|20.1|18.3|;T|Isaiah Likely|T|3.2|14.6|;F|Jaylen Waddle|W|8.8|11.4|Q;R|Javonte Williams|R|23.5|17.3|;D|Rams D/ST|D|2|5.6|;B|Kenny Gainwell|R|8.8|6.7|;R|Woody Marks|R|9.1|14.4|;B|Juwan Johnson|T|1.7|8.7|;B|Emmett Johnson|R|3.7|5.3|;Q|Tyler Shough|Q|13.82|15.7|;F|Jaylen Warren|R|18.7|18.2|
+Bryan Rosen~172.68~R|Ashton Jeanty|R|21.6|17.4|;W|Jaxon Smith-Njigba|W|33.3|20.9|;Q|Dak Prescott|Q|23.28|17.3|;R|D'Andre Swift|R|19|16.6|;F|Harold Fannin Jr.|T|13.1|8.3|;F|J.K. Dobbins|R|8.3|13.9|;W|Denzel Boston|W|5.7|12.3|;F|Omar Cooper Jr.|W|24.5|8.1|;D|Cowboys D/ST|D|4|7|;T|Colston Loveland|T|19.9|11.7|;B|Konata Mumpfield|W|2.5|7.5|
+Jordan Schneider~131.12~R|Saquon Barkley|R|15.1|15.6|Q;R|Christian McCaffrey|R|22|22.5|Q;W|Tetairoa McMillan|W|8|16.3|;W|Drake London|W|19.6|17.8|;F|Cam Skattebo|R|21.1|8|Q;T|Tucker Kraft|T|14.8|12.3|;Q|Brock Purdy|Q|12.02|21.1|;B|Kaelon Black|R|10.9|6.5|;F|Jordan Mason|R|6.8|10.6|;B|Dameon Pierce|R|11.8|6.9|;D|Browns D/ST|D|5|6.4|;B|Kyler Murray|Q|13.9|18.5|;F|Chris Godwin Jr.|W|6.7|11.3|;B|Makai Lemon|W|19.7|8.7|
+Kenny Keller~164.14~Q|Drake Maye|Q|29.44|21.4|;T|Brock Bowers|T|13.3|19.1|;R|Kenneth Walker III|R|9.7|19.7|;W|Tee Higgins|W|28.8|14.7|;F|Quinshon Judkins|R|23.4|13.6|;W|Marvin Harrison Jr.|W|7.6|7.4|;F|Travis Kelce|T|8.4|10.3|;D|Patriots D/ST|D|2|5.6|;B|Jonah Coleman|R|8.9|2.7|;F|Braelon Allen|R|21.4|15.2|;R|Josh Jacobs|R|20.1|12.9|Y
+Andrew Goldsmith~119.5~W|Amon-Ra St. Brown|W|26.2|20.2|Q;R|Jonathan Taylor|R|19|15.8|;W|Garrett Wilson|W|4.6|15.6|;B|Tony Pollard|R|38.5|14.5|;F|Michael Wilson|W|10.6|12.6|;F|Malik Washington|W|6.5|10.4|;R|Ollie Gordon II|R|19.3|12.2|;T|Tyler Higbee|T|3.4|7.5|;F|Ja'Kobi Lane|W|5.5|4.8|;B|Christian Kirk|W|0|8.1|;Q|Kirk Cousins|Q|20.4|17|;D|Broncos D/ST|D|4|6.6|`;
 var WK = {};
 (function(){
  var SLOT={Q:'QB',R:'RB',W:'WR',T:'TE',F:'FLEX',D:'DST',B:'BE',I:'IR',K:'K'}, POS={Q:'QB',R:'RB',W:'WR',T:'TE',D:'DST',K:'K'}, INJ={O:'OUT',D:'DOUBTFUL',Q:'QUESTIONABLE',R:'INJURY_RESERVE',Y:'DAY_TO_DAY'};
@@ -519,26 +554,31 @@ function vComm(){
   var S=P.filter(function(p){return p.act!==null&&p.proj>0&&p.slot!=='BE'&&p.slot!=='IR';});
   var over=S.slice().sort(function(a,b){return (b.act-b.proj)-(a.act-a.proj);}).slice(0,5), bust=S.slice().sort(function(a,b){return (a.act-a.proj)-(b.act-b.proj);}).slice(0,5);
   function plist(a){ return '<table><tbody>'+a.map(function(p){ var d=p.act-p.proj; return '<tr><td>'+esc(p.name)+'<span class="sub">'+esc(p.team)+'</span></td><td class="n mono">'+f1(p.act)+' <span class="sub">vs '+f1(p.proj)+'</span></td><td class="n mono '+(d>0?'pos':'neg')+'">'+sgn(d)+'</td></tr>'; }).join('')+'</tbody></table>'; }
-  var h='<div class="panel"><div class="ph"><h2>Week '+w+' intel</h2><span class="sub">ESPN box scores'+(w===6?' and the league transaction log':'')+'. Injury tags show status as of Oct 20.</span></div><div class="mu">';
+  var h='<div class="panel"><div class="ph"><h2>Week '+w+' intel</h2><span class="sub">ESPN box scores'+(TXW[w]?' and the league transaction log':'')+'. Injury tags show status as of Oct 27.</span></div><div class="mu">';
   WK[w].forEach(function(m,mi){
     var a=m[0], b=m[1], win=a[1]>b[1]?a:b, lose=win===a?b:a, margin=win[1]-lose[1];
     var ow=optimal(win[2]), ol=optimal(lose[2]), flip=(ol-lose[1])>margin;
     var left='Bench points left behind: '+esc(win[0])+' '+f1(ow-win[1])+', '+esc(lose[0])+' '+f1(ol-lose[1])+(flip?'. '+esc(lose[0])+' would have won with a better lineup.':'.');
-    var st=(w===6)?STORY6[mi]:autoStory(w,mi,win,lose,margin);
+    var st=STORYW[w]?STORYW[w][mi]:autoStory(w,mi,win,lose,margin);
     h+='<div class="card" style="grid-column:1/-1"><div class="side win"><span class="mk">W</span><span class="tn">'+esc(win[0])+'</span><span class="sub">#'+rowOf(w,names.indexOf(win[0])).power+'</span><span class="sc">'+f2(win[1])+'</span></div><div class="side lose"><span class="mk"></span><span class="tn">'+esc(lose[0])+'</span><span class="sub">#'+rowOf(w,names.indexOf(lose[0])).power+'</span><span class="sc">'+f2(lose[1])+'</span></div>'
      +'<div style="padding:10px 14px 4px;font-family:var(--f-display);font-weight:700;font-size:20px">'+esc(st.h)+'</div><p class="p" style="padding:0 14px 8px;color:var(--fg)">'+esc(st.t)+'</p><div class="ft">Margin '+f2(margin)+' · '+left+'</div></div>';
   });
   h+='</div></div>';
   h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Biggest overperformers</h2></div>'+plist(over)+'<div class="ph"><h2>Biggest busts</h2></div>'+plist(bust)+'<div class="note">Starters only, measured against ESPN\'s projection. Players who did not play are excluded.</div></div>';
-  if (w===6){
-    var rows=TX6.map(function(x){
+  if (TXW[w]){
+    var rows=TXW[w].map(function(x){
       var f=null; P.forEach(function(p){ if(p.team===x[1]&&p.name===x[2]) f=p; });
       var res=f?(f.slot==='BE'||f.slot==='IR'?'<span class="neg">Benched</span> '+f1(f.act||0)+' pts':'<span class="pos">Started</span> '+f1(f.act||0)+' pts <span class="sub">vs '+f1(f.proj||0)+'</span>'):'<span class="sub">Not on roster</span>';
-      return '<tr><td class="mono">'+x[0]+'</td><td>'+esc(x[1])+'</td><td>'+esc(x[2])+'</td><td>'+esc(x[3]||'–')+'</td><td class="n mono">$'+x[4]+'</td><td>'+res+'</td></tr>';
+      return '<tr><td class="mono">'+x[0]+'</td><td>'+esc(x[1])+'</td><td>'+esc(x[2])+'</td><td>'+esc(x[3]||'\u2013')+'</td><td class="n mono">$'+x[4]+'</td><td>'+res+'</td></tr>';
     }).join('');
-    h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Waiver wire scorecard</h2></div><div class="scroll"><table><thead><tr><th>Date</th><th>Team</th><th>Added</th><th>Dropped</th><th class="n">FAAB</th><th>Week 6</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="note">Moves processed Oct 14 to Oct 18. The box score has no in-game injury timing, so a low score is shown against projection without a cause.</div></div>';
+    h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Waiver wire scorecard</h2></div><div class="scroll"><table><thead><tr><th>Date</th><th>Team</th><th>Added</th><th>Dropped</th><th class="n">FAAB</th><th>Week '+w+'</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="note">Waiver moves processed in the days before the week\'s games. The box score has no in-game injury timing, so a low score is shown against projection without a cause.</div></div>';
   } else {
-    h+='<div class="panel" style="margin-top:18px"><div class="note">The waiver wire scorecard is only built for week 6 so far.</div></div>';
+    h+='<div class="panel" style="margin-top:18px"><div class="note">The waiver wire scorecard is only built for weeks 6 and 7 so far.</div></div>';
+  }
+  if (TRW[w]){
+    function pts(n){ var f=null; P.forEach(function(p){ if(p.name===n) f=p; }); return f?(f.act===null?'n/a':f1(f.act)+(f.slot==='BE'||f.slot==='IR'?' on the bench':'')):'not in a lineup'; }
+    var tr=TRW[w].map(function(x){ return '<tr><td class="mono">'+x[0]+'</td><td>'+esc(x[1])+' sent '+x[2].map(function(n){return esc(n)+' <span class="sub">('+pts(n)+')</span>';}).join(', ')+'</td><td>'+esc(x[3])+' sent '+x[4].map(function(n){return esc(n)+' <span class="sub">('+pts(n)+')</span>';}).join(', ')+'</td></tr>'; }).join('');
+    h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Trades</h2></div><div class="scroll"><table><thead><tr><th>Date</th><th>Side A</th><th>Side B</th></tr></thead><tbody>'+tr+'</tbody></table></div><div class="note">Points are the player\'s week '+w+' score on his new team.</div></div>';
   }
   return h;
 }
