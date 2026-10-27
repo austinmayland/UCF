@@ -96,6 +96,13 @@ html{scrollbar-gutter:stable;overflow-y:scroll}
 .side.win .sc{font-weight:600}
 .side .mk{width:18px;font-family:var(--f-display);font-weight:700;color:var(--up)}
 .card .ft{font-size:11px;color:var(--muted);padding:5px 12px;border-top:1px solid var(--line);font-family:var(--f-data)}
+.sbg{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px;padding:12px 16px 16px}
+.sbc{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.sbs{display:flex;align-items:center;gap:8px;min-width:0}.sbs.r{justify-content:flex-end;text-align:right}
+.sbs .av{width:30px;height:30px;font-size:13px}
+.sbt{min-width:0}.sbt .tn{display:block;font-size:17px;line-height:1.1;overflow-wrap:anywhere}.sbt .sc{display:block;font-family:var(--f-data);font-size:15px;font-weight:700}
+.sbs.w .sc{color:var(--up)}.sbs.l{opacity:.6}
+.sbm{font-family:var(--f-data);font-size:11px;color:var(--muted);text-align:center}
 .mth{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;padding:12px 16px 18px}
 .slider{display:grid;grid-template-columns:150px 1fr 38px;gap:10px;align-items:center;padding:6px 16px;font-size:14px}
 .slider input{width:100%;accent-color:var(--accent)}
@@ -128,7 +135,7 @@ textarea{width:calc(100% - 32px);margin:0 16px 12px;min-height:90px;font-family:
 
 <script>
 var WEEKS = 17, KEY = 'ucf-power-2026-v3';
-var TABS = [['rank','Power rankings'],['match','Matchups'],['trend','Trends'],['outlook','Outlook'],['comm','Week 6 intel'],['scores','Results'],['method','Method']];
+var TABS = [['rank','Power rankings'],['comm','Weekly intel'],['trend','Trends'],['outlook','Outlook'],['sched','Schedule'],['scores','Results'],['method','Method']];
 var tab='rank', hl=null, asof=0, trendMode='rank';
 var DEF_W = {ap:3, ppg:2.5, form:1.5, rec:1.5, win:3, spots:6, reg:14};
 
@@ -358,22 +365,69 @@ function vScores(w){
 }
 
 function rng(seed){ return function(){ seed|=0; seed=seed+0x6D2B79F5|0; var t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+var SCHED = {8:[[4,6],[2,9],[5,1],[8,7],[0,3]],9:[[2,4],[6,5],[9,8],[1,0],[7,3]],10:[[4,5],[8,2],[0,6],[3,9],[7,1]],11:[[8,4],[5,0],[2,3],[6,7],[9,1]],12:[[4,0],[3,8],[7,5],[1,2],[9,6]],13:[[3,4],[0,7],[8,1],[5,9],[2,6]],14:[[4,7],[1,3],[9,0],[6,8],[2,5]]};
+function erf(x){ var t=1/(1+0.3275911*Math.abs(x)), y=1-(((((1.061405429*t-1.453152027)*t)+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x); return x>=0?y:-y; }
+function Phi(x){ return 0.5*(1+erf(x/Math.SQRT2)); }
+function schedModel(w){
+  var rows=at(w).rows, lgsd=Math.sqrt(mean(rows.map(function(r){return r.sd*r.sd;})))||25, lgm=mean(rows.map(function(r){return 0.65*r.avg+0.35*r.form;})), K=5, m={};
+  rows.forEach(function(r){ m[r.i]={mu:(r.g*(0.65*r.avg+0.35*r.form)+K*lgm)/(r.g+K), v:0.5*r.sd*r.sd+0.5*lgsd*lgsd+lgsd*lgsd/(r.g+K), r:r}; });
+  return m;
+}
+function winProb(m,a,b){ return Phi((m[a].mu-m[b].mu)/Math.sqrt(m[a].v+m[b].v)); }
+function vSched(){
+  var w=lastWeek(); if(!w) return '<div class="panel"><div class="note">No scores yet.</div></div>';
+  var N=state.teams.length, m=schedModel(w), weeks=Object.keys(SCHED).map(Number).filter(function(k){return k>w&&k<=state.w.reg;}).sort(function(a,b){return a-b;});
+  if(!weeks.length) return '<div class="panel"><div class="note">No remaining regular-season games.</div></div>';
+  var nx=weeks[0], h='<div class="panel"><div class="ph"><h2>Week '+nx+' matchups</h2><span class="sub">Win chance from current ratings and scoring spread</span></div><div class="mu">';
+  SCHED[nx].forEach(function(pq){
+    var a=pq[0], b=pq[1], pa=winProb(m,a,b), pr=[[a,pa],[b,1-pa]];
+    h+='<div class="card">'+pr.map(function(x){ var i=x[0], p=x[1]; return '<div class="side '+(p>=0.5?'win':'lose')+'"><span class="mk"></span>'+av(i)+'<span class="tn">'+esc(state.teams[i].name)+'</span><span class="sub">#'+m[i].r.power+'</span><span class="sc">'+Math.round(p*100)+'%</span></div>'; }).join('')+'<div class="ft">Projected score '+f1(m[a].mu)+' to '+f1(m[b].mu)+'</div></div>';
+  });
+  h+='</div></div>';
+  var info=state.teams.map(function(t,i){
+    var opps=weeks.map(function(wk){ var o=-1; SCHED[wk].forEach(function(pq){ if(pq[0]===i) o=pq[1]; else if(pq[1]===i) o=pq[0]; }); return o; });
+    var avg=mean(opps.filter(function(o){return o>=0;}).map(function(o){return m[o].r.rating;}));
+    var ew=0; opps.forEach(function(o){ if(o>=0) ew+=winProb(m,i,o); });
+    return {i:i,opps:opps,avg:avg,ew:ew};
+  });
+  var order=info.slice().sort(function(a,b){return b.avg-a.avg;}); order.forEach(function(x,k){ x.sos=k+1; });
+  var ratings=state.teams.map(function(_,i){return m[i].r.rating;}).slice().sort(function(a,b){return b-a;});
+  h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Remaining schedule</h2><span class="sub">Cells show the opponent. Red is a tougher opponent, green an easier one.</span></div><div class="scroll"><table><thead><tr><th>Team</th>';
+  weeks.forEach(function(wk){ h+='<th class="n">W'+wk+'</th>'; });
+  h+='<th class="n">Avg opp rating</th><th class="n">Schedule</th><th class="n">Exp. wins</th></tr></thead><tbody>';
+  at(w).rows.forEach(function(r){
+    var x=info[r.i];
+    h+='<tr class="row'+(hl===r.i?' sel':'')+'" data-t="'+r.i+'"><td><div class="tm">'+av(r.i)+'<span class="tn">'+esc(r.name)+'</span></div></td>';
+    x.opps.forEach(function(o){
+      if(o<0){ h+='<td class="heat">–</td>'; return; }
+      var rk=1+ratings.filter(function(v){return v>m[o].r.rating;}).length, tier=rk<=3?'background:color-mix(in srgb,var(--down) 24%,transparent);':(rk>=N-2?'background:color-mix(in srgb,var(--up) 26%,transparent);':'');
+      h+='<td class="heat" style="'+tier+'min-width:104px"><b>'+esc(short(state.teams[o].name))+'</b></td>';
+    });
+    h+='<td class="n mono">'+f1(x.avg)+'</td><td class="n mono">'+(x.sos<=3?'<span class="neg">Hardest #'+x.sos+'</span>':(x.sos>=N-2?'<span class="pos">Easiest #'+x.sos+'</span>':'#'+x.sos))+'</td><td class="n mono">'+f1(x.ew)+' of '+weeks.length+'</td></tr>';
+  });
+  return h+'</tbody></table></div><div class="note">Opponent color reflects the opponent\'s current power rating. Schedule rank 1 is the hardest remaining slate. Expected wins add up the win chance for each remaining game.</div></div>';
+}
+function pctTxt(p){ return p>=0.995?'&gt;99%':(p<0.005?'&lt;1%':Math.round(p*100)+'%'); }
 function vOutlook(w){
   if(!w) return '<div class="panel"><div class="note">Outlook appears after week 1.</div></div>';
   var W=state.w, R=Math.max(W.reg,w), N=state.teams.length, spots=Math.min(W.spots,N), rows=at(w).rows, SIMS=4000, rand=rng(2026+w);
   function norm(){ var u=0,v=0; while(!u) u=rand(); while(!v) v=rand(); return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
   var lgsd=Math.sqrt(mean(rows.map(function(r){return r.sd*r.sd;}))) || 25;
-  var mu=rows.map(function(r){ return 0.65*r.avg+0.35*r.form; });
+  var lgm=mean(rows.map(function(r){return 0.65*r.avg+0.35*r.form;})), K=5;
+  var mu=rows.map(function(r){ return (r.g*(0.65*r.avg+0.35*r.form)+K*lgm)/(r.g+K); });
+  var psd=rows.map(function(r){ return lgsd/Math.sqrt(r.g+K); });
   var sd=rows.map(function(r){ return Math.sqrt(0.5*r.sd*r.sd+0.5*lgsd*lgsd); });
   var pf0=rows.map(function(r){return r.pf;}), w0=rows.map(function(r){return r.wins+r.ties/2;});
   var po=rows.map(function(){return 0;}), top=rows.map(function(){return 0;}), sumW=rows.map(function(){return 0;}), dist=rows.map(function(){return [];});
-  var idx=rows.map(function(_,k){return k;});
+  var idx=rows.map(function(_,k){return k;}), tpos={}; rows.forEach(function(r,k){ tpos[r.i]=k; });
   for (var s=0;s<SIMS;s++){
-    var win=w0.slice(), pf=pf0.slice();
+    var win=w0.slice(), pf=pf0.slice(), tm=[]; for (var z=0;z<N;z++) tm[z]=norm();
     for (var wk=w; wk<R; wk++){
-      for (var a=N-1;a>0;a--){ var b=Math.floor(rand()*(a+1)), tmp=idx[a]; idx[a]=idx[b]; idx[b]=tmp; }
-      var sc=[]; for (var q=0;q<N;q++) sc[q]=mu[q]+sd[q]*norm();
-      for (var p=0;p+1<N;p+=2){ var i=idx[p], j=idx[p+1]; pf[i]+=sc[i]; pf[j]+=sc[j]; if (sc[i]>sc[j]) win[i]++; else win[j]++; }
+      var prs=[], sch=SCHED[wk+1];
+      if (sch){ sch.forEach(function(pq){ prs.push([tpos[pq[0]],tpos[pq[1]]]); }); }
+      else { for (var a=N-1;a>0;a--){ var b=Math.floor(rand()*(a+1)), tmp=idx[a]; idx[a]=idx[b]; idx[b]=tmp; } for (var p=0;p+1<N;p+=2) prs.push([idx[p],idx[p+1]]); }
+      var sc=[]; for (var q=0;q<N;q++) sc[q]=mu[q]+psd[q]*tm[q]+sd[q]*norm();
+      prs.forEach(function(pr){ var i=pr[0], j=pr[1]; pf[i]+=sc[i]; pf[j]+=sc[j]; if (sc[i]>sc[j]) win[i]++; else win[j]++; });
     }
     var ord=idx.slice().sort(function(x,y){ return win[y]-win[x]||pf[y]-pf[x]; });
     ord.forEach(function(t,pos){ if(pos<spots) po[t]++; if(pos===0) top[t]++; });
@@ -382,12 +436,12 @@ function vOutlook(w){
   var out=rows.map(function(r,k){ var d=dist[k].slice().sort(function(a,b){return a-b;}); return {r:r,po:po[k]/SIMS,top:top[k]/SIMS,ew:sumW[k]/SIMS,lo:d[Math.floor(SIMS*0.1)],hi:d[Math.floor(SIMS*0.9)]}; });
   out.sort(function(a,b){ return b.po-a.po||b.ew-a.ew; });
   function sl(k,l,min,max){ return '<div class="slider"><label for="s_'+k+'">'+l+'</label><input id="s_'+k+'" type="range" min="'+min+'" max="'+max+'" step="1" value="'+W[k]+'" data-w="'+k+'"><span class="mono" id="v_'+k+'">'+W[k]+'</span></div>'; }
-  var h='<div class="panel"><div class="ph"><h2>Season outlook after week '+w+'</h2><span class="sub">'+SIMS+' simulated seasons</span></div><div class="mth" style="padding-bottom:4px"><div>'+sl('spots','Playoff spots',2,Math.max(2,N-1))+'</div><div>'+sl('reg','Regular-season weeks',w,17)+'</div></div><div class="scroll"><table><thead><tr><th>Team</th><th class="n">Now</th><th class="n">Proj. wins</th><th class="n">Range (10-90%)</th><th>Playoff odds</th><th class="n">#1 seed</th><th class="n">Power #</th></tr></thead><tbody>';
+  var h='<div class="panel"><div class="ph"><h2>Season outlook after week '+w+'</h2><span class="sub">'+SIMS+' simulated seasons</span></div><div class="mth" style="padding-bottom:4px"><div>'+sl('spots','Playoff spots',2,Math.max(2,N-1))+'</div><div>'+sl('reg','Regular-season weeks',w,17)+'</div></div><div class="scroll"><table><thead><tr><th>Team</th><th class="n">Now</th><th class="n">Proj. wins</th><th>Playoff odds</th><th class="n">#1 seed</th><th class="n">Power #</th></tr></thead><tbody>';
   out.forEach(function(o){
-    h+='<tr class="row'+(hl===o.r.i?' sel':'')+'" data-t="'+o.r.i+'"><td><div class="tm">'+av(o.r.i)+'<span class="tn">'+esc(o.r.name)+'</span></div></td><td class="n mono">'+rec(o.r)+'</td><td class="n mono">'+f1(o.ew)+'</td><td class="n mono">'+o.lo+' to '+o.hi+'</td>'
-     +'<td class="mono">'+Math.round(o.po*100)+'%<span class="bar"><i style="width:'+Math.round(o.po*100)+'%"></i></span></td><td class="n mono">'+Math.round(o.top*100)+'%</td><td class="n mono">'+o.r.power+'</td></tr>';
+    h+='<tr class="row'+(hl===o.r.i?' sel':'')+'" data-t="'+o.r.i+'"><td><div class="tm">'+av(o.r.i)+'<span class="tn">'+esc(o.r.name)+'</span></div></td><td class="n mono">'+rec(o.r)+'</td><td class="n mono">'+f1(o.ew)+'</td>'
+     +'<td class="mono">'+pctTxt(o.po)+'<span class="bar"><i style="width:'+Math.round(o.po*100)+'%"></i></span></td><td class="n mono">'+pctTxt(o.top)+'</td><td class="n mono">'+o.r.power+'</td></tr>';
   });
-  return h+'</tbody></table></div><div class="note">Each remaining week, teams are paired at random and each score is drawn from a normal curve centered on 65% season PPG and 35% recent PPG, with spread blended between the team and the league. Seeds go by wins, then points for. The real remaining schedule and playoff format will sharpen this. Treat early-season odds as rough.</div></div>';
+  return h+'</tbody></table></div><div class="note">Each simulated season draws a true scoring level for every team, pulled toward the league average because a few weeks is a small sample, then draws weekly scores around it. Seeds go by wins, then points for. Weeks with a published ESPN schedule use the real matchups, and any later week uses random pairings. Treat the odds as rough.</div></div>';
 }
 /* ---------- week 6 intel (ESPN box scores + transaction log) ---------- */
 var W6 = [
@@ -406,16 +460,16 @@ var TX6 = [
  ["Oct 14","Matt Ender","Seahawks D/ST","Cowboys D/ST",0],["Oct 14","Bryan Rosen","Hunter Henry","",0],["Oct 14","Andrew Goldsmith","Brandin Cooks","Tyler Allgeier",0],["Oct 14","Andrew Goldsmith","Tyler Higbee","T.J. Hockenson",0],["Oct 14","Jordan Schneider","Dameon Pierce","Deebo Samuel Sr.",1]
 ];
 var STORY6 = [
- {h:"Ender's waiver wire beats Mayland's Bijan problem",
-  t:"Credit where due: Ender dumped Josh Jacobs on Friday, grabbed Rachaad White, and watched him post 15.7 from a flex spot. Carnell Tate (19.0) joined in and Ender won by 10.5. Austin started Bijan Robinson, who scored 7.3 on a 24.0 projection. That 16.7-point face-plant is bigger than the margin. Keenan Allen (16.2) and Alvin Kamara (14.9) fought hard from the flex spots, and Romeo Doubs deserves a thank-you note for 11.2 on an IR designation. Ender also left Colston Loveland's 18.5 on the bench, because why not win with style."},
- {h:"Mizrahi wins by 2.4, Fernandez wins the benching award",
-  t:"Dean survived 14.0 from Puka Nacua and 1.0 from MarShawn Lloyd, which is a sentence nobody should win after. Matthew Golden (24.4) and George Kittle (17.9) made it work. Jorge started A.J. Brown (5.7) and Devaughn Vele (7.2) while Stefon Diggs (16.4) and Blake Corum (14.0) watched from the bench. Either swap flips the game. In his defense, Tre Tucker was magnificent at 26.7 and Chuba Hubbard added 21.1. Mahomes gave him 10.5, which is just rude."},
- {h:"Lande wins by 1.5, Rosen needs a lineup therapist",
-  t:"Derrick Henry (5.0) and Kyren Williams (9.7) fell 26.2 points short of projection and Lande still won, which says something about his luck and a lot about Germie Bernard (25.7) and DK Metcalf (20.3). Bryan Rosen lost by 1.5 while Hunter Henry (14.8) and Khalil Shakir (13.4), both waiver adds he made this week, sat on his bench behind Harold Fannin (1.9) and Ladd McConkey (2.7). Great scouting, shaky follow-through. Jaxon Smith-Njigba (27.4) and D'Andre Swift (23.0) deserved better."},
- {h:"Pickens bullies Keller, who starts two empty seats",
-  t:"Edsall picked up Trevor Lawrence for $5 after Ender cut him, and Lawrence repaid him with 29.3. Malik Nabers (30.5) and Isaiah Likely (23.9) made it a laugher, so well played. Kenny started Tee Higgins and Tyreek Hill, got zero from both, and lost by 41.1. Kenneth Walker (29.9) and Drake Maye (23.8) did their best to help. The $112 of FAAB on Josh Jacobs bought a 0.0 on the bench and a day-to-day tag. Bold spending."},
- {h:"Schneider throws the week's loudest punch",
-  t:"Christian McCaffrey posted 30.7, the best score anyone had all week, and Schneider won by 49.5, so enjoy the trophy-case energy. DeVonta Smith (20.5), Emeka Egbuka (17.8) and waiver find Dameon Pierce (15.0) all beat projection. Andrew Goldsmith got a huge 24.7 from Bhayshul Tuten and very little else. Josh Allen was 7.6 under projection, and his waiver adds produced 2.3 (Cooks), 4.2 (Higbee), 5.8 (Allgeier) and 1.0 (Giants D/ST), with Ja'Kobi Lane's 8.0 sitting on the bench. Busy hands, quiet results."}
+ {h:"Ender beats Mayland by 10.5, thanks to Bijan's bad day",
+  t:"Austin's Bijan Robinson scored 7.3 when he was projected for 24.0. That 16.7-point miss is bigger than the 10.5-point loss. Keenan Allen (16.2) and Alvin Kamara (14.9) did their best to keep it close, and Romeo Doubs gave 11.2 even with an IR tag now on his name. Ender dropped Josh Jacobs on Friday, picked up Rachaad White, and got 15.7 from him in a flex spot. Carnell Tate added 19.0. Ender also left Colston Loveland (18.5) on the bench and won anyway, which is a bit of a show-off move."},
+ {h:"Mizrahi squeaks past Fernandez, who left good players on the bench",
+  t:"Dean got just 14.0 from Puka Nacua and 1.0 from MarShawn Lloyd and still won. Matthew Golden (24.4) and George Kittle (17.9) bailed him out. Jorge started A.J. Brown (5.7) and Devaughn Vele (7.2) while Stefon Diggs (16.4) and Blake Corum (14.0) sat on his bench. Starting either one wins the game, because the margin was only 2.4. Tre Tucker (26.7) and Chuba Hubbard (21.1) played great for him, and Patrick Mahomes gave him 10.5, which did not help."},
+ {h:"Lande wins by 1.5 while Rosen sits his best players",
+  t:"Derrick Henry (5.0) and Kyren Williams (9.7) scored 26.2 points less than projected, and Lande still won. Germie Bernard (25.7) and DK Metcalf (20.3) saved him. Bryan Rosen lost by 1.5 with Hunter Henry (14.8) and Khalil Shakir (13.4) on his bench, both pickups from this week. They sat behind Harold Fannin (1.9) and Ladd McConkey (2.7). Starting either one wins the game. Jaxon Smith-Njigba (27.4) and D'Andre Swift (23.0) deserved better, and 27 points left on the bench is a lot."},
+ {h:"Edsall crushes Keller, who starts two players with zero points",
+  t:"Edsall picked up Trevor Lawrence for $5 after Ender cut him, and Lawrence scored 29.3. Malik Nabers (30.5) and Isaiah Likely (23.9) had big games too. Kenny started Tee Higgins and Tyreek Hill and got nothing from either, then lost by 41.1. Brock Bowers (11.0) and Davante Adams (6.9) came in well under projection, and Kenneth Walker (29.9) and Drake Maye (23.8) did what they could. Kenny's $112 pickup, Josh Jacobs, scored 0 on the bench and is listed day-to-day."},
+ {h:"Schneider wins by 49.5, the biggest blowout of the week",
+  t:"Christian McCaffrey scored 30.7, the highest score of the week. DeVonta Smith (20.5), Emeka Egbuka (17.8) and Dameon Pierce (15.0, a waiver pickup) all beat their projections. Andrew Goldsmith got 24.7 from Bhayshul Tuten and not much from anyone else. Josh Allen scored 7.6 less than projected, and his pickups didn't help: Brandin Cooks 2.3, Tyler Higbee 4.2, Tyler Allgeier 5.8 and the Giants defense 1.0. Ja'Kobi Lane scored 8.0 on his bench."}
 ];
 var TX7 = [
  ["Oct 21","Andrew Goldsmith","Kirk Cousins","",0],["Oct 21","Andrew Goldsmith","Broncos D/ST","Giants D/ST",0],["Oct 21","Bryan Rosen","Cowboys D/ST","Colts D/ST",0],["Oct 21","Matt Ender","Deebo Samuel Sr.","Seahawks D/ST",0],["Oct 21","Jordan Schneider","Kyler Murray","Justin Herbert",0],["Oct 21","Andrew Goldsmith","Christian Kirk","Tyler Allgeier",1],["Oct 21","Dean Mizrahi","Titans D/ST","Terry McLaurin",3],["Oct 21","Edsall Hilty","Tyler Shough","Keaton Mitchell",6],["Oct 21","Austin Mayland","Kyle Pitts Sr.","James Conner",8],["Oct 21","Jordan Lande","DeMario Douglas","Courtland Sutton",9],
@@ -428,16 +482,16 @@ var TR7 = [
  ["Oct 23","Edsall Hilty",["Chris Olave"],"Matt Ender",["Jaylen Warren"]]
 ];
 var STORY7 = [
- {h:"Mizrahi edges Ender, who benched the quarterback who would have won it",
-  t:"Ender started Bryce Young (5.4) and left Caleb Williams (24.1) on the bench, an 18.7-point swing in a game he lost by 6.7. Luther Burden III (25.7 on a 13.0 projection) and trade pickup Hunter Henry (14.1) kept it close, and Jahmyr Gibbs still delivered 19.3. Nico Collins posted 2.6 on a 17.2 projection, which is a lot to ask anyone to forgive. Dean Mizrahi got 20.5 from Emanuel Wilson and 21.8 from Puka Nacua, and a steady 17.5 from Matthew Stafford. Well played, and a little lucky."},
- {h:"Mayland rides McBride and Flowers past Lande",
-  t:"Trey McBride (29.1) and Zay Flowers (29.7) gave Austin 58.8 points on 32.0 of projection, and he won by 15.7 even with Aaron Jones (3.6) and Sam LaPorta (2.8) stinking up the lineup. Kyle Pitts, the $8 waiver claim, scored 13.2 on the bench while LaPorta started. Jordan Lande had his own drama. Derrick Henry gave 5.9 on a 19.0 projection, and Joe Burrow scored 28.9 on the bench while Jordan Love started for 17.0. Jameson Williams (26.1) and Rhamondre Stevenson (22.5) were great, and the $9 DeMario Douglas claim scored 5.3 on the bench."},
- {h:"Fernandez holds off Hilty by 1.9 in the week's closest game",
-  t:"Bucky Irving (26.0), Tre Tucker (23.3) and Blake Corum (17.1) carried Jorge, and T.J. Hockenson, picked up for free on Thursday, gave 13.5 at tight end. Justin Jefferson (8.4 on a 19.1 projection) and A.J. Brown (7.8) did their best to lose it. Edsall Hilty has a real argument that he won the trade: Jaylen Warren scored 18.7 where Chris Olave gave Ender 11.6. Javonte Williams (23.5) and Malik Nabers (20.1) were excellent, but Isaiah Likely's 3.2 on a 14.6 projection was an 11.4-point shortfall, bigger than the margin."},
- {h:"Rosen posts the week's highest score",
-  t:"Bryan Rosen scored 172.7, the most in the league, and won by 41.6. Jaxon Smith-Njigba (33.3), Omar Cooper Jr. (24.5 on an 8.1 projection) and trade acquisition Colston Loveland (19.9) did the damage, so the Breece Hall and Hunter Henry package paid off at least in one direction. Jordan Schneider got 21.1 from Cam Skattebo and still lost, with Makai Lemon (19.7) and Kyler Murray (13.9) both on the bench. Brock Purdy scored 12.0 on a 21.1 projection, which does not help the cause."},
- {h:"Keller finally gets his money's worth from Jacobs",
-  t:"The $112 Josh Jacobs claim started at running back and scored 20.1, so Kenny can stop explaining it. Tee Higgins (28.8), Drake Maye (29.4) and Quinshon Judkins (23.4) built a 164.1-point lineup, and Kenneth Walker's 9.7 on a 19.7 projection barely mattered. Andrew Goldsmith left Tony Pollard's 38.5 on the bench, the biggest single score anyone stranded this week, and lost by 44.6 mostly because Garrett Wilson (4.6) and Tyler Higbee (3.4) gave him nothing. Kirk Cousins (20.4) was a good claim."}
+ {h:"Ender loses by 6.7 with a 24-point quarterback on his bench",
+  t:"Ender started Bryce Young (5.4) and left Caleb Williams (24.1) on the bench. That swing of 18.7 points would have won him the game. Luther Burden III (25.7) and Hunter Henry (14.1, from the Rosen trade) kept it close. Nico Collins scored 2.6 when he was projected for 17.2. Dean Mizrahi got 20.5 from Emanuel Wilson and 21.8 from Puka Nacua, and wins a game he probably should not have."},
+ {h:"Mayland beats Lande behind big games from McBride and Flowers",
+  t:"Trey McBride (29.1) and Zay Flowers (29.7) scored 58.8 points together, and Austin won by 15.7 even though Aaron Jones (3.6) and Sam LaPorta (2.8) did almost nothing. Kyle Pitts, an $8 pickup, scored 13.2 on the bench while LaPorta started. Lande had his own problems. Derrick Henry scored 5.9 on a 19.0 projection, and Joe Burrow scored 28.9 on his bench while Jordan Love started for 17.0. Jameson Williams (26.1) and Rhamondre Stevenson (22.5) were great, but his $9 pickup, DeMario Douglas, scored 5.3 on the bench."},
+ {h:"Fernandez beats Hilty by 1.9, the closest game of the week",
+  t:"Bucky Irving (26.0), Tre Tucker (23.3) and Blake Corum (17.1) carried Jorge, and T.J. Hockenson, a free pickup on Thursday, gave him 13.5 at tight end. Justin Jefferson (8.4) and A.J. Brown (7.8) almost cost him the game. Edsall can say he won the trade: Jaylen Warren scored 18.7, while Chris Olave gave Ender 11.6. Javonte Williams (23.5) and Malik Nabers (20.1) were great, but Isaiah Likely scored 3.2 on a 14.6 projection. That 11.4-point miss was bigger than the margin, and Edsall gets to explain it to the group chat."},
+ {h:"Rosen scores the most points in the league this week",
+  t:"Bryan Rosen scored 172.7 and won by 41.6. Jaxon Smith-Njigba (33.3), Omar Cooper Jr. (24.5) and Colston Loveland (19.9, from the trade) did the damage, so that trade is looking good so far. Jordan Schneider got 21.1 from Cam Skattebo and still lost, with Makai Lemon (19.7) and Kyler Murray (13.9) on his bench. Brock Purdy scored 12.0 when he was projected for 21.1."},
+ {h:"Keller's $112 pickup finally scores",
+  t:"Josh Jacobs, the $112 pickup, started at running back and scored 20.1. Tee Higgins (28.8), Drake Maye (29.4) and Quinshon Judkins (23.4) put up a 164.1-point lineup, and Kenneth Walker's 9.7 on a 19.7 projection hardly mattered. Andrew Goldsmith left Tony Pollard's 38.5 on his bench, the most points anyone left behind on one player this week, and lost by 44.6. Garrett Wilson (4.6) and Tyler Higbee (3.4) gave him almost nothing, though Kirk Cousins (20.4) was a good pickup."}
 ];
 var TXW={6:TX6,7:TX7}, TRW={7:TR7}, STORYW={6:STORY6,7:STORY7};
 function optimal(players){
@@ -534,18 +588,80 @@ function autoStory(w,mi,win,lose,margin){
   var bust=sl.filter(function(p){return p[3]!==null&&p[4]>=8;}).sort(function(a,b){return (a[3]-a[4])-(b[3]-b[4]);})[0];
   var zeros=sl.filter(function(p){return p[3]===null||(p[3]<=0.5&&p[4]>=5);});
   var ow=optimal(win[2])-win[1], ol=optimal(lose[2])-lose[1];
-  var h = margin<4 ? [W+' survives '+L+' by '+f1(margin), W+' sneaks past '+L, L+' loses a heartbreaker to '+W][v]
-        : margin>=40 ? [W+' flattens '+L, L+' gets steamrolled by '+W, W+' runs up the score on '+L][v]
-        : [W+' handles '+L, W+' takes care of '+L, L+' comes up short against '+W][v];
+  var h = margin<4 ? [W+' barely beats '+L+' by '+f1(margin), W+' sneaks past '+L, L+' loses a close one to '+W][v]
+        : margin>=40 ? [W+' blows out '+L, L+' gets crushed by '+W, W+' runs away from '+L][v]
+        : [W+' beats '+L, W+' takes down '+L, L+' falls to '+W][v];
   var s=[];
-  if (best) s.push([best[1]+' led the way with '+f1(best[3])+' against '+f1(best[4])+' projected, and '+W+' deserves credit for the start.', 'Hats off to '+W+': '+best[1]+' posted '+f1(best[3])+' on '+f1(best[4])+' projected.', best[1]+' ('+f1(best[3])+' vs '+f1(best[4])+') did the heavy lifting, and '+W+' looked smart for starting him.'][v]);
-  if (bust) s.push([L+' got '+f1(bust[3])+' from '+bust[1]+' on '+f1(bust[4])+' projected, which is a creative use of a roster spot.', bust[1]+' gave '+L+' '+f1(bust[3])+' against '+f1(bust[4])+', a real gut punch.', L+' needed '+bust[1]+' and received '+f1(bust[3])+' on '+f1(bust[4])+' projected.'][v]);
-  if (ol>margin) s.push(L+' left '+f1(ol)+' points on the bench and would have won with a smarter lineup.');
-  else if (zeros.length) s.push(L+' started '+zeros.length+' player'+(zeros.length>1?'s':'')+' who scored nothing ('+zeros.slice(0,2).map(function(p){return p[1];}).join(', ')+'). Bold.');
-  else if (ow>=12) s.push(W+' also left '+f1(ow)+' on the bench and still won, which is a flex.');
-  if (margin<4) s.push('Decided by '+f1(margin)+', so every single point counted.');
-  else if (margin>=40) s.push('A '+f1(margin)+'-point margin is less a game and more a statement.');
+  if (best) s.push([best[1]+' had the big game for '+W+': '+f1(best[3])+' when he was projected for '+f1(best[4])+'.', W+' got '+f1(best[3])+' from '+best[1]+', who was only projected for '+f1(best[4])+'. Nice start.', best[1]+' ('+f1(best[3])+', projected '+f1(best[4])+') carried '+W+'.'][v]);
+  if (bust) s.push([L+' got '+f1(bust[3])+' from '+bust[1]+', who was projected for '+f1(bust[4])+'. Ouch.', bust[1]+' was supposed to give '+L+' about '+f1(bust[4])+' and gave '+f1(bust[3])+'.', L+' needed more from '+bust[1]+': '+f1(bust[3])+' against '+f1(bust[4])+' projected.'][v]);
+  if (ol>margin) s.push(L+' left '+f1(ol)+' points on the bench and would have won with a better lineup.');
+  else if (zeros.length) s.push(L+' started '+zeros.length+' player'+(zeros.length>1?'s':'')+' who scored nothing ('+zeros.slice(0,2).map(function(p){return p[1];}).join(', ')+').');
+  else if (ow>=12) s.push(W+' left '+f1(ow)+' points on the bench and still won.');
+  if (margin<4) s.push(['Decided by '+f1(margin)+', so every point counted.','Only '+f1(margin)+' points apart, so somebody will be thinking about one lineup decision all week.',f1(margin)+' points. One different start or sit and this flips.'][v]);
+  else if (margin<8) s.push('A one-score game, so expect some group chat arguments about the starts and sits.');
+  else if (margin>=40) s.push('A '+f1(margin)+'-point margin is not close.');
   return {h:h,t:s.join(' ')};
+}
+/* ---------- season-long storylines from weekly rosters ---------- */
+var ROS={}, PH={}, MAXW=0;
+(function(){
+ Object.keys(WK).forEach(function(k){ var w=Number(k); if(w>MAXW) MAXW=w; ROS[w]={};
+  WK[w].forEach(function(m){ m.forEach(function(t){ var o={};
+   t[2].forEach(function(p){ o[p[1]]={slot:p[0],pos:p[2],act:p[3],proj:p[4]}; (PH[p[1]]=PH[p[1]]||[]).push({w:w,team:t[0],slot:p[0],act:p[3],proj:p[4]}); });
+   ROS[w][t[0]]=o; }); }); });
+})();
+function isStart(s){ return s!=='BE'&&s!=='IR'; }
+function firstOn(team,name){ for(var w=1;w<=MAXW;w++) if(ROS[w]&&ROS[w][team]&&ROS[w][team][name]) return w; return 99; }
+function startHist(team,name,w){ var h=[]; for(var k=1;k<=w;k++){ var r=ROS[k]&&ROS[k][team]&&ROS[k][team][name]; if(r&&isStart(r.slot)&&r.act!==null&&r.proj>=8) h.push(r.act-r.proj); } return h; }
+function sum(a){ return a.reduce(function(x,y){return x+y;},0); }
+function benchLeft(team,k){ var r=0; (WK[k]||[]).forEach(function(m){ m.forEach(function(t){ if(t[0]===team) r=optimal(t[2])-t[1]; }); }); return r; }
+function seasonLines(w,pair){
+  var out=[], traded={};
+  (TRW[w]||[]).forEach(function(x){ x[2].forEach(function(n){ traded[n]=x[1]; }); x[4].forEach(function(n){ traded[n]=x[3]; }); });
+  pair.forEach(function(t){
+    var tm=t[0], cand=[];
+    t[2].forEach(function(p){
+      if(!isStart(p[0])||p[3]===null||p[4]<10||p[3]-p[4]>-6) return;
+      var h=startHist(tm,p[1],w), sf=h.filter(function(d){return d<=-3;}), pu=firstOn(tm,p[1])>1, tot=-sum(sf);
+      if(pu ? (sf.length>=2&&tot>=12) : (sf.length>=3&&tot>=25)) cand.push({p:p,n:h.length,k:sf.length,tot:tot,pu:pu});
+    });
+    cand.sort(function(a,b){ return (b.pu-a.pu)||(b.tot-a.tot); });
+    if(cand.length){ var c=cand[0], v=(w+c.k)%2;
+      out.push({pr:c.pu?2:4,t:c.pu
+        ? [tm+"'s pickup "+c.p[1]+' has missed projection by 3 or more in '+c.k+' of '+c.n+' starts ('+f1(c.tot)+' points short combined). The honeymoon is over.', c.p[1]+' has hurt '+tm+' in '+c.k+' of '+c.n+' starts, '+f1(c.tot)+' points under projection combined. Time to try someone else?'][v]
+        : [tm+' keeps starting '+c.p[1]+', who has missed projection by 3 or more in '+c.k+' of '+c.n+' starts ('+f1(c.tot)+' points short).', c.p[1]+' has come up short in '+c.k+' of '+c.n+' starts for '+tm+' ('+f1(c.tot)+' points combined).'][v]}); }
+  });
+  pair.forEach(function(t){
+    var tm=t[0], best=null;
+    Object.keys(PH).forEach(function(n){
+      var h=PH[n], cur=h.filter(function(x){return x.w===w;})[0];
+      if(!cur||cur.team===tm||!isStart(cur.slot)||cur.act===null||cur.act<15) return;
+      var prior=h.filter(function(x){return x.w<w&&x.team===tm;});
+      if(prior.length&&(!best||cur.act>best.act)) best={n:n,act:cur.act,team:cur.team,wk:prior[prior.length-1].w+1};
+    });
+    if(best) out.push({pr:1,t:traded[best.n]===tm
+      ? tm+' traded '+best.n+' away and he just scored '+f1(best.act)+' for '+best.team+'. This week, '+tm.split(' ')[0]+' lost that trade.'
+      : tm+' let '+best.n+' go in week '+best.wk+', and he just scored '+f1(best.act)+' for '+best.team+'. '+['That one stings.','Not a great look.','Hard to argue that was the right call.'][(w+best.n.length)%3]});
+  });
+  pair.forEach(function(t){
+    var tm=t[0], cnt=0; for(var k=1;k<=w;k++) if(benchLeft(tm,k)>=12) cnt++;
+    if(cnt>=3&&benchLeft(tm,w)>=10) out.push({pr:3,t:tm+' has left 12 or more points on the bench in '+cnt+' of '+w+' weeks. '+['Check the lineup before kickoff.','The bench keeps outscoring the starters.'][(w+cnt)%2]});
+  });
+  out.sort(function(a,b){return a.pr-b.pr;});
+  var res=[], bust=0;
+  out.forEach(function(x){ if(res.length<2 && !(x.pr===4&&bust)){ res.push(x.t); if(x.pr===4) bust++; } });
+  return res;
+}
+function movesPanel(w){
+  if(w<2||!ROS[w]||!ROS[w-1]) return '';
+  var rows=state.teams.map(function(t){
+    var cur=ROS[w][t.name]||{}, prev=ROS[w-1][t.name]||{}, adds=[], drops=[];
+    Object.keys(cur).forEach(function(n){ if(!prev[n]){ var p=cur[n]; adds.push(esc(n)+' <span class="sub">('+(isStart(p.slot)?'started':'bench')+(p.act===null?'':', '+f1(p.act))+')</span>'); } });
+    Object.keys(prev).forEach(function(n){ if(!cur[n]){ var where=null; state.teams.forEach(function(o){ if(o.name!==t.name&&ROS[w][o.name]&&ROS[w][o.name][n]) where={t:o.name,p:ROS[w][o.name][n]}; }); drops.push(esc(n)+(where?' <span class="sub">(now '+esc(short(where.t))+(where.p.act===null?'':', '+f1(where.p.act))+')</span>':'')); } });
+    if(!adds.length&&!drops.length) return '';
+    return '<tr><td>'+esc(t.name)+'</td><td>'+(adds.join(', ')||'–')+'</td><td>'+(drops.join(', ')||'–')+'</td></tr>';
+  }).join('');
+  return '<div class="panel" style="margin-top:18px"><div class="ph"><h2>Roster moves</h2><span class="sub">Inferred from weekly lineups</span></div><div class="scroll"><table><thead><tr><th>Team</th><th>Added</th><th>Dropped</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="note">Adds and drops are compared to the previous week. Trades show up here too, and players who never scored are not tracked. Dates and FAAB are only listed for weeks 6 and 7.</div></div>';
 }
 function vComm(){
   var w=asof; if(!w||!WK[w]) return '<div class="panel"><div class="note">No intel for this week yet.</div></div>';
@@ -554,14 +670,19 @@ function vComm(){
   var S=P.filter(function(p){return p.act!==null&&p.proj>0&&p.slot!=='BE'&&p.slot!=='IR';});
   var over=S.slice().sort(function(a,b){return (b.act-b.proj)-(a.act-a.proj);}).slice(0,5), bust=S.slice().sort(function(a,b){return (a.act-a.proj)-(b.act-b.proj);}).slice(0,5);
   function plist(a){ return '<table><tbody>'+a.map(function(p){ var d=p.act-p.proj; return '<tr><td>'+esc(p.name)+'<span class="sub">'+esc(p.team)+'</span></td><td class="n mono">'+f1(p.act)+' <span class="sub">vs '+f1(p.proj)+'</span></td><td class="n mono '+(d>0?'pos':'neg')+'">'+sgn(d)+'</td></tr>'; }).join('')+'</tbody></table>'; }
-  var h='<div class="panel"><div class="ph"><h2>Week '+w+' intel</h2><span class="sub">ESPN box scores'+(TXW[w]?' and the league transaction log':'')+'. Injury tags show status as of Oct 27.</span></div><div class="mu">';
-  WK[w].forEach(function(m,mi){
+  var sb='<div class="panel"><div class="ph"><h2>Week '+w+' matchups</h2><span class="sub">Sorted by margin, closest first. The number in the middle is the margin.</span></div><div class="sbg">'+WK[w].slice().sort(function(x,y){return Math.abs(x[0][1]-x[1][1])-Math.abs(y[0][1]-y[1][1]);}).map(function(m){
+    var a=m[0], b=m[1], aw=a[1]>=b[1];
+    function side(t,win,right){ var i=names.indexOf(t[0]); var st='<div class="sbt"><span class="tn">'+esc(t[0])+'</span><span class="sc">'+f2(t[1])+'</span></div>'; return '<div class="sbs'+(right?' r':'')+(win?' w':' l')+'">'+(right?st+av(i):av(i)+st)+'</div>'; }
+    return '<div class="sbc">'+side(a,aw,false)+'<div class="sbm">'+f1(Math.abs(a[1]-b[1]))+'</div>'+side(b,!aw,true)+'</div>';
+  }).join('')+'</div></div>';
+  var h=sb+'<div class="panel" style="margin-top:18px"><div class="ph"><h2>Week '+w+' recaps</h2><span class="sub">ESPN box scores'+(TXW[w]?' and the league transaction log':'')+'. Injury tags show status as of Oct 27.</span></div><div class="mu">';
+  WK[w].map(function(m,mi){return [m,mi];}).sort(function(x,y){return Math.abs(x[0][0][1]-x[0][1][1])-Math.abs(y[0][0][1]-y[0][1][1]);}).forEach(function(q){ var m=q[0], mi=q[1];
     var a=m[0], b=m[1], win=a[1]>b[1]?a:b, lose=win===a?b:a, margin=win[1]-lose[1];
     var ow=optimal(win[2]), ol=optimal(lose[2]), flip=(ol-lose[1])>margin;
     var left='Bench points left behind: '+esc(win[0])+' '+f1(ow-win[1])+', '+esc(lose[0])+' '+f1(ol-lose[1])+(flip?'. '+esc(lose[0])+' would have won with a better lineup.':'.');
     var st=STORYW[w]?STORYW[w][mi]:autoStory(w,mi,win,lose,margin);
-    h+='<div class="card" style="grid-column:1/-1"><div class="side win"><span class="mk">W</span><span class="tn">'+esc(win[0])+'</span><span class="sub">#'+rowOf(w,names.indexOf(win[0])).power+'</span><span class="sc">'+f2(win[1])+'</span></div><div class="side lose"><span class="mk"></span><span class="tn">'+esc(lose[0])+'</span><span class="sub">#'+rowOf(w,names.indexOf(lose[0])).power+'</span><span class="sc">'+f2(lose[1])+'</span></div>'
-     +'<div style="padding:10px 14px 4px;font-family:var(--f-display);font-weight:700;font-size:20px">'+esc(st.h)+'</div><p class="p" style="padding:0 14px 8px;color:var(--fg)">'+esc(st.t)+'</p><div class="ft">Margin '+f2(margin)+' · '+left+'</div></div>';
+    h+='<div class="card" style="grid-column:1/-1">'
+     +'<div style="padding:10px 14px 4px;font-family:var(--f-display);font-weight:700;font-size:20px">'+esc(st.h)+'</div><p class="p" style="padding:0 14px 8px;color:var(--fg)">'+esc(st.t)+'</p>'+(function(){ var sl=seasonLines(w,[a,b]); return sl.length?'<p class="p" style="padding:0 14px 8px;color:var(--fg)"><b>Season storyline:</b> '+sl.map(esc).join(' ')+'</p>':''; })()+'<div class="ft">Margin '+f2(margin)+' · '+left+'</div></div>';
   });
   h+='</div></div>';
   h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Biggest overperformers</h2></div>'+plist(over)+'<div class="ph"><h2>Biggest busts</h2></div>'+plist(bust)+'<div class="note">Starters only, measured against ESPN\'s projection. Players who did not play are excluded.</div></div>';
@@ -573,7 +694,7 @@ function vComm(){
     }).join('');
     h+='<div class="panel" style="margin-top:18px"><div class="ph"><h2>Waiver wire scorecard</h2></div><div class="scroll"><table><thead><tr><th>Date</th><th>Team</th><th>Added</th><th>Dropped</th><th class="n">FAAB</th><th>Week '+w+'</th></tr></thead><tbody>'+rows+'</tbody></table></div><div class="note">Waiver moves processed in the days before the week\'s games. The box score has no in-game injury timing, so a low score is shown against projection without a cause.</div></div>';
   } else {
-    h+='<div class="panel" style="margin-top:18px"><div class="note">The waiver wire scorecard is only built for weeks 6 and 7 so far.</div></div>';
+    h+=movesPanel(w);
   }
   if (TRW[w]){
     function pts(n){ var f=null; P.forEach(function(p){ if(p.name===n) f=p; }); return f?(f.act===null?'n/a':f1(f.act)+(f.slot==='BE'||f.slot==='IR'?' on the bench':'')):'not in a lineup'; }
@@ -615,7 +736,7 @@ function render(keepData){
   document.getElementById('tabs').innerHTML=TABS.map(function(t){ return '<button role="tab" data-tab="'+t[0]+'" aria-selected="'+(tab===t[0])+'">'+t[1]+'</button>'; }).join('');
   var v=document.getElementById('view');
   if (tab==='data'){ if(!keepData) v.innerHTML=vData(); return; }
-  v.innerHTML = tab==='rank'?vRank(asof):tab==='match'?vMatch(asof):tab==='trend'?vTrend(asof):tab==='outlook'?vOutlook(asof):tab==='comm'?vComm():tab==='scores'?vScores(asof):vMethod();
+  v.innerHTML = tab==='rank'?vRank(asof):tab==='match'?vMatch(asof):tab==='sched'?vSched():tab==='trend'?vTrend(asof):tab==='outlook'?vOutlook(asof):tab==='comm'?vComm():tab==='scores'?vScores(asof):vMethod();
   window.scrollTo(0,_y);
 }
 document.addEventListener('click',function(e){
